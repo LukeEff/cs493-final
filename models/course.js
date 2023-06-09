@@ -3,6 +3,12 @@ const { getDbReference } = require('../lib/mongo');
 const { extractValidFields } = require('../lib/validation');
 
 const DB_COLLECTION_NAME = 'courses';
+const DB_COLLECTION_NAME_ENROLLMENTS = 'enrollments';
+
+const EnrollmentSchema = {
+  courseId: { required: true },
+  studentId: { required: true }
+}
 
 const CourseSchema = {
   subject: { required: true },
@@ -49,8 +55,14 @@ async function deleteCourseById(courseId) {
   return await getDbReference().collection(DB_COLLECTION_NAME).deleteOne({ _id: new ObjectId(courseId) });
 }
 
+async function getStudentsEnrolledInCourse(courseId) {
+  // TODO - need some sort of enrollment collection
+  return {};
+}
+
 exports.createCourse = createCourse;
 exports.getCourseById = getCourseById;
 exports.getAllCourses = getAllCourses;
 exports.updateCourseById = updateCourseById;
 exports.deleteCourseById = deleteCourseById;
+exports.getStudentsEnrolledInCourse = getStudentsEnrolledInCourse;
