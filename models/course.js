@@ -25,3 +25,17 @@ async function createCourse(course) {
     });
   });
 }
+
+/**
+ * Get a course by its id
+ * @param courseId - the id of the course to get
+ * @returns {Promise<*>} - the course with the specified id
+ */
+async function getCourseById(courseId) {
+  const results = await getDbReference().collection(DB_COLLECTION_NAME).find({ _id: new ObjectId(courseId) }).toArray();
+  return results[0];
+}
+
+async function getAllCourses() {
+  return await getDbReference().collection(DB_COLLECTION_NAME).find({}).toArray();
+}
