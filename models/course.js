@@ -39,3 +39,7 @@ async function getCourseById(courseId) {
 async function getAllCourses() {
   return await getDbReference().collection(DB_COLLECTION_NAME).find({}).toArray();
 }
+
+exports.createCourse = createCourse;
+exports.getCourseById = getCourseById;
+exports.getAllCourses = getAllCourses;
