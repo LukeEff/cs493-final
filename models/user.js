@@ -33,5 +33,15 @@ async function createUser(user) {
   });
 }
 
+/**
+ * Gets all users in the database with a specified email and returns the first one. Email is a unique field.
+ * @param email - the email of the user to get
+ * @returns {Promise<*>} - the user with the specified email
+ */
+async function getUserByEmail(email) {
+  const results = await getDbReference().collection(DB_COLLECTION_NAME).find({ email: email }).toArray();
+  return results[0];
+}
+
 exports.ROLES = ROLES;
 exports.UserSchema = UserSchema;
