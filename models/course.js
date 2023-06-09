@@ -40,6 +40,12 @@ async function getAllCourses() {
   return await getDbReference().collection(DB_COLLECTION_NAME).find({}).toArray();
 }
 
+async function updateCourseById(courseId, course) {
+  course = extractValidFields(course, CourseSchema);
+  return await getDbReference().collection(DB_COLLECTION_NAME).updateOne({ _id: new ObjectId(courseId) }, { $set: course });
+}
+
 exports.createCourse = createCourse;
 exports.getCourseById = getCourseById;
 exports.getAllCourses = getAllCourses;
+exports.updateCourseById = updateCourseById;
