@@ -45,7 +45,12 @@ async function updateCourseById(courseId, course) {
   return await getDbReference().collection(DB_COLLECTION_NAME).updateOne({ _id: new ObjectId(courseId) }, { $set: course });
 }
 
+async function deleteCourseById(courseId) {
+  return await getDbReference().collection(DB_COLLECTION_NAME).deleteOne({ _id: new ObjectId(courseId) });
+}
+
 exports.createCourse = createCourse;
 exports.getCourseById = getCourseById;
 exports.getAllCourses = getAllCourses;
 exports.updateCourseById = updateCourseById;
+exports.deleteCourseById = deleteCourseById;
