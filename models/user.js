@@ -34,6 +34,16 @@ async function createUser(user) {
 }
 
 /**
+ * Get a user by their id
+ * @param userId - the id of the user to get
+ * @returns {Promise<*>} - the user with the specified id
+ */
+async function getUserById(userId) {
+  const results = await getDbReference().collection(DB_COLLECTION_NAME).find({ _id: new ObjectId(userId) }).toArray();
+  return results[0];
+}
+
+/**
  * Gets all users in the database with a specified email and returns the first one. Email is a unique field.
  * @param email - the email of the user to get
  * @returns {Promise<*>} - the user with the specified email
