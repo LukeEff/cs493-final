@@ -1,4 +1,4 @@
-# CS493 Final Project#
+# CS493 Final Project #
 ### Contributors: Luke Fernandez & Caleb Knight ###
 This is our project for CS493.  The goal of this project is to create an app similar to Canvas known as Tarpaulin. Our app will containt 4 main entities: *Users*, *Courses*, *Assignments*, and *Submissions*. Each of these will have specifc routes and unique functions.
 
