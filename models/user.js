@@ -1,7 +1,7 @@
 const { ObjectId } = require('mongodb');
 const { getDbReference } = require('../lib/mongo');
 const { extractValidFields } = require('../lib/validation');
-const { jsonwebtoken } = require('jsonwebtoken');
+const { jwt } = require('jsonwebtoken');
 
 const DB_COLLECTION_NAME = 'users';
 
@@ -12,6 +12,7 @@ const ROLES = {
 }
 
 const UserSchema = {
+  _id: { required: true, unique: true },
   name: { required: true },
   email: { required: true, unique: true },
   password: { required: true },
@@ -24,7 +25,7 @@ const UserSchema = {
  * @returns {Promise<unknown>} - the id of the created user
  */
 async function createUser(user) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     user = extractValidFields(user, UserSchema);
     user.role ??= ROLES.USER;
     getDbReference().collection(DB_COLLECTION_NAME).insertOne(user).then(result => {
@@ -53,5 +54,26 @@ async function getUserByEmail(email) {
   return results[0];
 }
 
+async function validateUser(email, password) {
+  const user = await getUserByEmail(email);
+  if (user && user.password === password) {
+    return generateJWT(user);
+  }
+  return null;
+}
+
+async function generateJWT(user) {
+  return jwt.sign({
+    id: user._id,
+    role: user.role,
+    name: user.name,
+    email: user.email
+  }, process.env.JWT_SECRET, { expiresIn: '24h' })
+}
+
 exports.ROLES = ROLES;
 exports.UserSchema = UserSchema;
+exports.createUser = createUser;
+exports.getUserById = getUserById;
+exports.getUserByEmail = getUserByEmail;
+exports.validateUser = validateUser;
