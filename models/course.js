@@ -56,8 +56,7 @@ async function deleteCourseById(courseId) {
 }
 
 async function getStudentsEnrolledInCourse(courseId) {
-  // TODO - need some sort of enrollment collection
-  return {};
+  return await getDbReference().collection(DB_COLLECTION_NAME_ENROLLMENTS).find({courseId: courseId}).toArray();
 }
 
 exports.createCourse = createCourse;
