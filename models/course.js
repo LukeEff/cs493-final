@@ -63,6 +63,13 @@ async function getStudentsEnrolledInCourse(courseId) {
   return await getDbReference().collection(DB_COLLECTION_NAME_ENROLLMENTS).find({courseId: courseId}).toArray();
 }
 
+async function getCSVofStudentsEnrolledInCourse(courseId) {
+  const students = await getStudentsEnrolledInCourse(courseId);
+  const studentIds = students.map(student => student.studentId);
+  const studentObjects = await getDbReference().collection('users').find({_id: {$in: studentIds}}).toArray();
+  return studentObjects.map(student => student.name).join(',');
+}
+
 async function enrollStudentInCourse(enrollment) {
 enrollment = extractValidFields(enrollment, EnrollmentSchema);
   return await getDbReference().collection(DB_COLLECTION_NAME_ENROLLMENTS).insertOne(enrollment);
