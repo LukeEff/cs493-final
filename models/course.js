@@ -86,3 +86,6 @@ exports.getAllCourses = getAllCourses;
 exports.updateCourseById = updateCourseById;
 exports.deleteCourseById = deleteCourseById;
 exports.getStudentsEnrolledInCourse = getStudentsEnrolledInCourse;
+exports.getCSVofStudentsEnrolledInCourse = getCSVofStudentsEnrolledInCourse;
+exports.enrollStudentInCourse = enrollStudentInCourse;
+exports.unenrollStudentInCourse = unenrollStudentInCourse;
