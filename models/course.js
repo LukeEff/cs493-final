@@ -55,8 +55,22 @@ async function deleteCourseById(courseId) {
   return await getDbReference().collection(DB_COLLECTION_NAME).deleteOne({ _id: new ObjectId(courseId) });
 }
 
+////////////////////////
+// ENROLLMENT METHODS //
+////////////////////////
+
 async function getStudentsEnrolledInCourse(courseId) {
   return await getDbReference().collection(DB_COLLECTION_NAME_ENROLLMENTS).find({courseId: courseId}).toArray();
+}
+
+async function enrollStudentInCourse(enrollment) {
+enrollment = extractValidFields(enrollment, EnrollmentSchema);
+  return await getDbReference().collection(DB_COLLECTION_NAME_ENROLLMENTS).insertOne(enrollment);
+}
+
+async function unenrollStudentInCourse(enrollment) {
+  enrollment = extractValidFields(enrollment, EnrollmentSchema);
+  return await getDbReference().collection(DB_COLLECTION_NAME_ENROLLMENTS).deleteOne(enrollment);
 }
 
 exports.createCourse = createCourse;
