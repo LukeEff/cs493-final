@@ -27,3 +27,25 @@ router.post('/', async function (req, res, next) {
         }
     }
 })
+
+
+function authorized(req) {
+    const authHeader = req.headers.authorization
+    const auth = authHeader && authHeader.split(' ')[1]
+    if (!auth) {
+        return false
+    }
+    try {
+        req.auth = jsonwebtoken.verify(auth, process.env.JWT_SECRET)
+        return true
+    }
+    catch (e) {
+        return false
+    }
+}
+  
+function admin(req) {
+    return authorized(req) && req.jwt.admin
+}
+  
+  module.exports = router
