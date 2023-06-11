@@ -29,6 +29,24 @@ router.post('/', async function (req, res, next) {
 })
 
 
+// Route to login a user
+router.post('/login', async function (req, res, next) {
+    const { email, password } = req.body
+    const user = await User.findOne({ where: { email: email }})
+    if (user) {
+        if (user.validPassword(password)) {
+            // Respond with a JWT token
+            const token = user.genToken()
+            res.status(200).json({ token: token })
+        } else {
+            res.status(401).json(['Invalid email'])
+        }
+      } else {
+            res.status(401).json(['Invalid password'])
+        }
+});
+  
+
 function authorized(req) {
     const authHeader = req.headers.authorization
     const auth = authHeader && authHeader.split(' ')[1]
