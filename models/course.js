@@ -11,3 +11,21 @@ const CourseSchema = {
     term: { required: true },
     instructorId: { required: true }
   }
+
+/**
+* Create a new course
+* @param course - course schema created
+* @returns {Promise<unknown>} - id of created course
+*/
+async function createCourse(course) {
+    return new Promise((resolve) => {
+        course = extractValidFields(course, CourseSchema);
+        getDbReference().collection(DB_COLLECTION_NAME).insertOne(course).then(result => {
+            resolve(result.insertId);
+        });
+    });
+}
+
+/**
+* Get a list of all courses
+*/
