@@ -36,7 +36,7 @@ exports.createCourse = createCourse;
 
 /**
 * Get data about a course
-* @param courseId - id of course
+* @param courseId - id of course to get data of
 * @returns {Promise<*>} - the course with the specified id
 */
 async function getCourseById(courseId) {
@@ -44,7 +44,64 @@ async function getCourseById(courseId) {
     return results[0];
 }
 
+exports.getCourseById = getCourseById;
+
 /**
- * Update data on a specific course
- * 
- */
+* Update data on a specific course
+* @param courseId - id of course to update
+* @returns {Promise<*>} - the updated course
+*/
+async function updateCourse(courseId) {
+
+}
+exports.updateCourse = updateCourse;
+
+/**
+* Delete a course
+* @param courseId - id of course to delete
+* @returns {Promise<*>} - confirm deleted course
+*/
+async function deleteCourse(courseId) {
+
+}
+exports.deleteCourse = deleteCourse;
+
+/**
+* Get array of students in a specific course
+* @param courseId - id of course to get array of students from
+* @returns {Promise<*>} - array of students enrolled
+*/
+async function getArrayOfStudents(courseId) {
+
+}
+exports.getArrayOfStudents = getArrayOfStudents;
+
+/**
+* Update enrollment for a course
+* @param courseId - course to update
+* @returns {Promise<*>} - updated course
+*/
+async function updateEnrollment(courseId) {
+
+}
+exports.updateEnrollment = updateEnrollment;
+
+/**
+* Get csv file of students enrolled in a course
+* @param courseId - course to get roster for
+* @returns {Promise<*>} - csv file of roster
+*/
+async function getCSVFileOfStudents(courseId) {
+
+}
+exports.getCSVFileOfStudents = getCSVFileOfStudents;
+
+/**
+* Get list of all assignments for a course
+* @param courseId - course that we want to get list of assignments from
+* @returns {Promise<*>} - list of assignments for specified course
+*/
+async function getListOfAssignments(courseId) {
+
+}
+exports.getListOfAssignments = getListOfAssignments;
