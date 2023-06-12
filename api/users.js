@@ -2,6 +2,14 @@ const { Router } = require('express')
 
 const { User } = require('../models/user')
 
+const {
+    UserSchema,
+    createUser,
+    getUserById,
+    getUserByEmail,
+    validateUser
+} = require('../models/user')
+
 const reqAuthentication = require('../lib/auth')
 
 const router = Router()
@@ -19,7 +27,7 @@ router.post('/', async function (req, res, next) {
         return
     }
     try {
-        const user = await User.create(req.body)
+        const user = await createUser(req.body)
         res.status(201).json(user)
     } catch (err) {
         if (err instanceof ValidationError) {
