@@ -43,3 +43,8 @@ async function getCourseById(courseId) {
     const results = await getDbReference().collection(DB_COLLECTION_NAME).find({_id: new ObjectId(courseId) }).toArray();
     return results[0];
 }
+
+/**
+ * Update data on a specific course
+ * 
+ */
