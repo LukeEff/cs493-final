@@ -12,6 +12,8 @@ const CourseSchema = {
     instructorId: { required: true }
   }
 
+exports.CourseSchema = CourseSchema;
+
 /**
 * Create a new course
 * @param course - course schema created
@@ -25,7 +27,19 @@ async function createCourse(course) {
         });
     });
 }
+exports.createCourse = createCourse;
 
 /**
 * Get a list of all courses
 */
+
+
+/**
+* Get data about a course
+* @param courseId - id of course
+* @returns {Promise<*>} - the course with the specified id
+*/
+async function getCourseById(courseId) {
+    const results = await getDbReference().collection(DB_COLLECTION_NAME).find({_id: new ObjectId(courseId) }).toArray();
+    return results[0];
+}
