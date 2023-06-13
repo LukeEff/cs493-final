@@ -91,6 +91,28 @@ router.patch('/:assignmentId', reqAuthentication, reqInstructor, async function 
 });
 
 /**
+ * Completely removes the data for the specified Assignment, including all submissions. Only an authenticated User
+ * with 'admin' role or an authenticated 'instructor' User whose ID matches the instructorId of the Course
+ * corresponding to the Assignment's courseId can delete an Assignment.
+ */
+router.delete('/:assignmentId', reqAuthentication, reqInstructor, async function (req, res, next) {
+  try {
+    const assignment = await Assignment.getAssignmentById(req.params.assignmentId);
+
+    if (assignment && (await isCourseInstructor(req.jwt, assignment.courseId))) {
+      await Assignment.deleteAssignment(req.params.assignmentId);
+      res.status(204).end();
+    } else {
+      res.status(404).json({
+        error: "Requested assignment ID not found"
+      });
+    }
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * Checks if the course with specified ID has an instructor with specified ID
  * @param jwt JWT of user making request
  * @param courseId ID of course to check
