@@ -53,3 +53,13 @@ async function updateAssignment(assignmentId) {
 
 }
 exports.updateAssignment = updateAssignment;
+
+/**
+* Delete an assignment
+* @param courseId - id of assignment to delete
+* @returns {Promise<*>} - confirm deleted assignment
+*/
+async function deleteAssignment(assignmentId) {
+
+}
+exports.deleteAssignment = deleteAssignment;
