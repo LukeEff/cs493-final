@@ -3,105 +3,89 @@ const { getDbReference } = require('../lib/mongo');
 const { extractValidFields } = require('../lib/validation');
 
 const DB_COLLECTION_NAME = 'courses';
+const DB_COLLECTION_NAME_ENROLLMENTS = 'enrollments';
+
+const EnrollmentSchema = {
+  courseId: { required: true },
+  studentId: { required: true }
+}
 
 const CourseSchema = {
-    _id: { required: true, unique: true },
-    number: { required: true },
-    title: { required: true, unique: true },
-    term: { required: true },
-    instructorId: { required: true }
-  }
-
-exports.CourseSchema = CourseSchema;
+  subject: { required: true },
+  number: { required: true },
+  title: { required: true },
+  term: { required: true },
+  instructorId: { required: true }
+}
 
 /**
-* Create a new course
-* @param course - course schema created
-* @returns {Promise<unknown>} - id of created course
-*/
+ * Create a new course in the database
+ * @param course - the course schema to create
+ * @returns {Promise<unknown>} - the id of the created course
+ */
 async function createCourse(course) {
-    return new Promise((resolve) => {
-        course = extractValidFields(course, CourseSchema);
-        getDbReference().collection(DB_COLLECTION_NAME).insertOne(course).then(result => {
-            resolve(result.insertId);
-        });
+  return new Promise((resolve) => {
+    course = extractValidFields(course, CourseSchema);
+    getDbReference().collection(DB_COLLECTION_NAME).insertOne(course).then(result => {
+      resolve(result.insertedId);
     });
+  });
 }
-exports.createCourse = createCourse;
 
 /**
-* Get a list of all courses
-*/
-
-
-/**
-* Get data about a course
-* @param courseId - id of course to get data of
-* @returns {Promise<*>} - the course with the specified id
-*/
+ * Get a course by its id
+ * @param courseId - the id of the course to get
+ * @returns {Promise<*>} - the course with the specified id
+ */
 async function getCourseById(courseId) {
-    const results = await getDbReference().collection(DB_COLLECTION_NAME).find({_id: new ObjectId(courseId) }).toArray();
-    return results[0];
+  const results = await getDbReference().collection(DB_COLLECTION_NAME).find({ _id: new ObjectId(courseId) }).toArray();
+  return results[0];
 }
 
+async function getAllCourses() {
+  return await getDbReference().collection(DB_COLLECTION_NAME).find({}).toArray();
+}
+
+async function updateCourseById(courseId, course) {
+  course = extractValidFields(course, CourseSchema);
+  return await getDbReference().collection(DB_COLLECTION_NAME).updateOne({ _id: new ObjectId(courseId) }, { $set: course });
+}
+
+async function deleteCourseById(courseId) {
+  return await getDbReference().collection(DB_COLLECTION_NAME).deleteOne({ _id: new ObjectId(courseId) });
+}
+
+////////////////////////
+// ENROLLMENT METHODS //
+////////////////////////
+
+async function getStudentsEnrolledInCourse(courseId) {
+  return await getDbReference().collection(DB_COLLECTION_NAME_ENROLLMENTS).find({courseId: courseId}).toArray();
+}
+
+async function getCSVofStudentsEnrolledInCourse(courseId) {
+  const students = await getStudentsEnrolledInCourse(courseId);
+  const studentIds = students.map(student => student.studentId);
+  const studentObjects = await getDbReference().collection('users').find({_id: {$in: studentIds}}).toArray();
+  return studentObjects.map(student => student.name).join(',');
+}
+
+async function enrollStudentInCourse(enrollment) {
+enrollment = extractValidFields(enrollment, EnrollmentSchema);
+  return await getDbReference().collection(DB_COLLECTION_NAME_ENROLLMENTS).insertOne(enrollment);
+}
+
+async function unenrollStudentInCourse(enrollment) {
+  enrollment = extractValidFields(enrollment, EnrollmentSchema);
+  return await getDbReference().collection(DB_COLLECTION_NAME_ENROLLMENTS).deleteOne(enrollment);
+}
+
+exports.createCourse = createCourse;
 exports.getCourseById = getCourseById;
-
-/**
-* Update data on a specific course
-* @param courseId - id of course to update
-* @returns {Promise<*>} - the updated course
-*/
-async function updateCourse(courseId) {
-
-}
-exports.updateCourse = updateCourse;
-
-/**
-* Delete a course
-* @param courseId - id of course to delete
-* @returns {Promise<*>} - confirm deleted course
-*/
-async function deleteCourse(courseId) {
-
-}
-exports.deleteCourse = deleteCourse;
-
-/**
-* Get array of students in a specific course
-* @param courseId - id of course to get array of students from
-* @returns {Promise<*>} - array of students enrolled
-*/
-async function getArrayOfStudents(courseId) {
-
-}
-exports.getArrayOfStudents = getArrayOfStudents;
-
-/**
-* Update enrollment for a course
-* @param courseId - course to update
-* @returns {Promise<*>} - updated course
-*/
-async function updateEnrollment(courseId) {
-
-}
-exports.updateEnrollment = updateEnrollment;
-
-/**
-* Get csv file of students enrolled in a course
-* @param courseId - course to get roster for
-* @returns {Promise<*>} - csv file of roster
-*/
-async function getCSVFileOfStudents(courseId) {
-
-}
-exports.getCSVFileOfStudents = getCSVFileOfStudents;
-
-/**
-* Get list of all assignments for a course
-* @param courseId - course that we want to get list of assignments from
-* @returns {Promise<*>} - list of assignments for specified course
-*/
-async function getListOfAssignments(courseId) {
-
-}
-exports.getListOfAssignments = getListOfAssignments;
+exports.getAllCourses = getAllCourses;
+exports.updateCourseById = updateCourseById;
+exports.deleteCourseById = deleteCourseById;
+exports.getStudentsEnrolledInCourse = getStudentsEnrolledInCourse;
+exports.getCSVofStudentsEnrolledInCourse = getCSVofStudentsEnrolledInCourse;
+exports.enrollStudentInCourse = enrollStudentInCourse;
+exports.unenrollStudentInCourse = unenrollStudentInCourse;
