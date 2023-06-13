@@ -4,6 +4,8 @@ const { Assignment } = require('../models/assignment');
 
 const { reqAuthentication, reqAdmin, reqInstructor, reqUser } = require('../lib/auth');
 
+const { ROLES } = require('../models/user');
+
 const { validateAgainstSchema } = require('../lib/validation');
 const {Course} = require("../models/course");
 
@@ -17,7 +19,7 @@ const router = Router();
 router.post('/', reqAuthentication, reqInstructor,  async function (req, res, next) {
   try {
     // Check if the authenticated user is the instructor of the course specified in the request body
-    if (!await isCourseInstructor(req.jwt._id, req.body.courseId)) {
+    if (!await isCourseInstructor(req.jwt, req.body.courseId)) {
       res.status(403).json({
         error: "Unauthorized to create the specified assignment"
       });
@@ -59,7 +61,47 @@ router.get('/:assignmentId', async function (req, res, next) {
   }
 });
 
-async function isCourseInstructor(instructorId, courseId) {
+/**
+ * Performs a partial update on the data for the Assignment. Note that submissions cannot be modified via this
+ * endpoint. Only an authenticated User with 'admin' role or an authenticated 'instructor' User whose ID matches
+ * the instructorId of the Course corresponding to the Assignment's courseId can update an Assignment.
+ */
+router.patch('/:assignmentId', reqAuthentication, reqInstructor, async function (req, res, next) {
+  try {
+    const assignment = await Assignment.getAssignmentById(req.params.assignmentId);
+
+    if (assignment && (await isCourseInstructor(req.jwt, assignment.courseId))) {
+      if (validateAgainstSchema(req.body, Assignment.AssignmentSchema)) {
+        res.status(400).json({
+          error: "Request body is not a valid assignment object"
+        });
+        return;
+      }
+
+      const updatedAssignment = await Assignment.updateAssignment(req.params.assignmentId, req.body);
+      res.status(200).json(updatedAssignment);
+    } else {
+      res.status(404).json({
+        error: "Requested assignment ID not found"
+      });
+    }
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Checks if the course with specified ID has an instructor with specified ID
+ * @param jwt JWT of user making request
+ * @param courseId ID of course to check
+ * @returns {Promise<boolean>} true if course has instructor with specified ID or if user is an admin, false otherwise
+ */
+async function isCourseInstructor(jwt, courseId) {
+  const instructorId = jwt._id;
+  const role = jwt.role;
+  if (role === ROLES.ADMIN) {
+    return true;
+  }
   const course = await Course.getCourseById(courseId);
   if (course) {
     return course.instructorId === instructorId;
