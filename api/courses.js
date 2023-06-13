@@ -107,4 +107,29 @@ router.get('/:courseId/students', async function (req, res, next) {
     } catch (err) {
         next(err);
     }
-}
+});
+
+router.post('/:courseId/students', async function (req, res, next) {
+    try {
+        // TODO - Middleware to check if user is authorized to add a student to a course
+
+        if (validateAgainstSchema(req.body, Course.EnrollmentSchema)) {
+            res.status(400).json({
+                error: "Request body is not a valid enrollment object"
+            });
+            return;
+        }
+
+        const course = await Course.getCourseById(req.params.courseId);
+        if (course) {
+            const student = await Course.enrollStudentInCourse(req.params.courseId, req.body);
+            res.status(200).json(student);
+        } else {
+            res.status(404).json({
+                error: "Requested course ID not found"
+            });
+        }
+    } catch (err) {
+        next(err);
+    }
+});
