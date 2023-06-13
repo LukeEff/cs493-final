@@ -12,11 +12,17 @@ const router = Router();
  * Returns the list of all Courses. This list should be paginated.
  * The Courses returned should not contain the list of students in the Course or the list of Assignments for the Course.
  *
- * TODO: Paginate the list of Courses
+ * TODO: Verify endpoint behaves as expected
  */
 router.get('/', async function (req, res, next) {
     try {
-        const courses = await Course.getAllCourses();
+        const term = req.query.term;
+        const subject = req.query.subject;
+        const number = req.query.number;
+        const page = parseInt(req.query.page) || 1;
+        const coursesPerPage = (req.query.numPerPage) || 10;
+
+        const courses = await Course.getAllCourses(subject, number, term, page, coursesPerPage);
         res.status(200).json(courses);
     } catch (err) {
         next(err);
