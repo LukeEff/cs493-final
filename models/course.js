@@ -39,11 +39,27 @@ async function createCourse(course) {
  */
 async function getCourseById(courseId) {
   const results = await getDbReference().collection(DB_COLLECTION_NAME).find({ _id: new ObjectId(courseId) }).toArray();
-  return results[0];
+  return results[0] || null; // TODO - ensure error is not thrown if no results
 }
 
-async function getAllCourses() {
-  return await getDbReference().collection(DB_COLLECTION_NAME).find({}).toArray();
+/**
+ * Gets paginated courses
+ * @param subject - the subject of the courses to get
+ * @param number - fetch courses with the specified course number
+ * @param term - fetch courses in the specified academic term
+ * @param page - the page of courses to get
+ * @param numPerPage - the number of courses per page
+ * @returns {Promise<*>} - the courses on the specified page
+ */
+async function getAllCourses(subject, number, term, page = 0, numPerPage = 20) {
+  const results = await getDbReference().collection(DB_COLLECTION_NAME).find({
+    subject: subject,
+    number: number,
+    term: term
+  }).toArray();
+
+  // Less efficient, but less complicated
+  return results.slice(page * numPerPage, (page + 1) * numPerPage);
 }
 
 async function updateCourseById(courseId, course) {
@@ -67,7 +83,9 @@ async function getCSVofStudentsEnrolledInCourse(courseId) {
   const students = await getStudentsEnrolledInCourse(courseId);
   const studentIds = students.map(student => student.studentId);
   const studentObjects = await getDbReference().collection('users').find({_id: {$in: studentIds}}).toArray();
-  return studentObjects.map(student => student.name).join(',');
+  return studentObjects.map(student =>
+      student.userId + ',' + student.name + ',' + student.email
+  ).join('\n');
 }
 
 async function enrollStudentInCourse(enrollment) {
@@ -80,6 +98,12 @@ async function unenrollStudentInCourse(enrollment) {
   return await getDbReference().collection(DB_COLLECTION_NAME_ENROLLMENTS).deleteOne(enrollment);
 }
 
+async function getAssignmentsForCourse(courseId) {
+  return await getDbReference().collection('assignments').find({courseId: courseId}).toArray();
+}
+
+exports.EnrollmentSchema = EnrollmentSchema;
+exports.CourseSchema = CourseSchema;
 exports.createCourse = createCourse;
 exports.getCourseById = getCourseById;
 exports.getAllCourses = getAllCourses;
@@ -89,3 +113,4 @@ exports.getStudentsEnrolledInCourse = getStudentsEnrolledInCourse;
 exports.getCSVofStudentsEnrolledInCourse = getCSVofStudentsEnrolledInCourse;
 exports.enrollStudentInCourse = enrollStudentInCourse;
 exports.unenrollStudentInCourse = unenrollStudentInCourse;
+exports.getAssignmentsForCourse = getAssignmentsForCourse;
