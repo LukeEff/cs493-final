@@ -173,12 +173,18 @@ router.post('/:courseId/students', reqAuthentication, reqInstructor, async funct
     }
 });
 
-router.get('/:courseId/roster', async function (req, res, next) {
+/**
+ * Returns a CSV file containing information about all of the students currently enrolled in the Course,
+ * including names, IDs, and email addresses. Only an authenticated User with 'admin' role or an authenticated
+ * 'instructor' User whose ID matches the instructorId of the Course can fetch the course roster.
+ *
+ * // TODO: Need to verify that the CSV file is being returned correctly
+ */
+router.get('/:courseId/roster', reqAuthentication, reqInstructor, async function (req, res, next) {
     try {
-        // TODO - Middleware to check if user is authorized to view the roster for a course
-
         const course = await Course.getCourseById(req.params.courseId);
-        if (course) {
+        const instructorId = req.jwt.id;
+        if (course && await isCourseInstructor(instructorId, req.params.courseId)) {
             const roster = await Course.getCSVofStudentsEnrolledInCourse(req.params.courseId);
             res.status(200).json(roster);
         } else {
@@ -191,10 +197,11 @@ router.get('/:courseId/roster', async function (req, res, next) {
     }
 });
 
-router.get('/:courseId/assignments', async function (req, res, next) {
+/**
+ * Returns a list containing the Assignment IDs of all Assignments for the Course.
+ */
+router.get('/:courseId/assignments', reqAuthentication, reqUser, async function (req, res, next) {
     try {
-        // TODO - Middleware to check if user is authorized to view assignments for a course
-
         const course = await Course.getCourseById(req.params.courseId);
         if (course) {
             const assignments = await Course.getAssignmentsForCourse(req.params.courseId);
