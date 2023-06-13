@@ -29,3 +29,16 @@ async function createAssignment(assignment) {
     });
 }
 exports.createAssignment = createAssignment;
+
+
+/**
+* Get data about an assignment
+* @param assignmentId - id of assignment to get data of
+* @returns {Promise<*>} - the assignment with the specified id
+*/
+async function getAssignmentById(assignmentId) {
+    const results = await getDbReference().collection(DB_COLLECTION_NAME).find({_id: new ObjectId(assignmentId) }).toArray();
+    return results[0];
+}
+
+exports.getAssignmentById = getAssignmentById;
