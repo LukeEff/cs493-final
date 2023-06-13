@@ -80,6 +80,10 @@ async function unenrollStudentInCourse(enrollment) {
   return await getDbReference().collection(DB_COLLECTION_NAME_ENROLLMENTS).deleteOne(enrollment);
 }
 
+async function getAssignmentsForCourse(courseId) {
+  return await getDbReference().collection('assignments').find({courseId: courseId}).toArray();
+}
+
 exports.EnrollmentSchema = EnrollmentSchema;
 exports.CourseSchema = CourseSchema;
 exports.createCourse = createCourse;
@@ -91,3 +95,4 @@ exports.getStudentsEnrolledInCourse = getStudentsEnrolledInCourse;
 exports.getCSVofStudentsEnrolledInCourse = getCSVofStudentsEnrolledInCourse;
 exports.enrollStudentInCourse = enrollStudentInCourse;
 exports.unenrollStudentInCourse = unenrollStudentInCourse;
+exports.getAssignmentsForCourse = getAssignmentsForCourse;

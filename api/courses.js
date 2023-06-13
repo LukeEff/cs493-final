@@ -150,4 +150,24 @@ router.get('/:courseId/roster', async function (req, res, next) {
     } catch (err) {
         next(err);
     }
-}
+});
+
+router.get('/:courseId/assignments', async function (req, res, next) {
+    try {
+        // TODO - Middleware to check if user is authorized to view assignments for a course
+
+        const course = await Course.getCourseById(req.params.courseId);
+        if (course) {
+            const assignments = await Course.getAssignmentsForCourse(req.params.courseId);
+            res.status(200).json(assignments);
+        } else {
+            res.status(404).json({
+                error: "Requested course ID not found"
+            });
+        }
+    } catch (err) {
+        next(err);
+    }
+});
+
+module.exports = router;
