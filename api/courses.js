@@ -89,4 +89,22 @@ router.delete('/:courseId', async function (req, res, next) {
     } catch (err) {
         next(err);
     }
+});
+
+router.get('/:courseId/students', async function (req, res, next) {
+    try {
+        // TODO - Middleware to check if user is authorized to view students in a course
+
+        const course = await Course.getCourseById(req.params.courseId);
+        if (course) {
+            const students = await Course.getStudentsEnrolledInCourse(req.params.courseId);
+            res.status(200).json(students);
+        } else {
+            res.status(404).json({
+                error: "Requested course ID not found"
+            });
+        }
+    } catch (err) {
+        next(err);
+    }
 }
