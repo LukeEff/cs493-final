@@ -12,6 +12,7 @@ const ROLES = {
 }
 
 const UserSchema = {
+  _id: { required: true, unique: true },
   name: { required: true },
   email: { required: true, unique: true },
   password: { required: true },
