@@ -71,4 +71,22 @@ router.patch('/:courseId', async function (req, res, next) {
     } catch (err) {
         next(err);
     }
+});
+
+router.delete('/:courseId', async function (req, res, next) {
+    try {
+        // TODO - Middleware to check if user is authorized to delete a course
+
+        const course = await Course.getCourseById(req.params.courseId);
+        if (course) {
+            await Course.deleteCourseById(req.params.courseId);
+            res.status(204).end();
+        } else {
+            res.status(404).json({
+                error: "Requested course ID not found"
+            });
+        }
+    } catch (err) {
+        next(err);
+    }
 }
