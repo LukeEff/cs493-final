@@ -2,12 +2,18 @@ const { Router } = require('express');
 
 const { Course } = require('../models/course');
 
-const { reqAuthentication } = require('../lib/auth');
+const { reqAuthentication, reqAdmin, reqInstructor, reqUser } = require('../lib/auth');
 
 const { validateAgainstSchema } = require('../lib/validation');
 
 const router = Router();
 
+/**
+ * Returns the list of all Courses. This list should be paginated.
+ * The Courses returned should not contain the list of students in the Course or the list of Assignments for the Course.
+ *
+ * TODO: Paginate the list of Courses
+ */
 router.get('/', async function (req, res, next) {
     try {
         const courses = await Course.getAllCourses();
@@ -22,20 +28,14 @@ router.get('/', async function (req, res, next) {
  * Creates a new Course with specified data and adds it to the application's database.
  * Only an authenticated User with 'admin' role can create a new Course.
  */
-router.post('/', reqAuthentication, async function (req, res, next) {
+router.post('/', reqAuthentication, reqAdmin, async function (req, res, next) {
     try {
-
-        // TODO - Middleware to check if user is authorized to create a course
-
-
-
         if (validateAgainstSchema(req.body, Course.CourseSchema)) {
             res.status(400).json({
                 error: "Request body is not a valid course object"
             });
             return;
         }
-
         const course = await Course.createCourse(req.body);
         res.status(201).json(course);
     } catch (err) {
