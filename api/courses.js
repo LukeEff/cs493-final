@@ -133,3 +133,21 @@ router.post('/:courseId/students', async function (req, res, next) {
         next(err);
     }
 });
+
+router.get('/:courseId/roster', async function (req, res, next) {
+    try {
+        // TODO - Middleware to check if user is authorized to view the roster for a course
+
+        const course = await Course.getCourseById(req.params.courseId);
+        if (course) {
+            const roster = await Course.getCSVofStudentsEnrolledInCourse(req.params.courseId);
+            res.status(200).json(roster);
+        } else {
+            res.status(404).json({
+                error: "Requested course ID not found"
+            });
+        }
+    } catch (err) {
+        next(err);
+    }
+}
