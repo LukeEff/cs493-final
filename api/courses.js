@@ -47,4 +47,28 @@ router.get('/:courseId', async function (req, res, next) {
     } catch (err) {
         next(err);
     }
+});
+
+router.patch('/:courseId', async function (req, res, next) {
+    try {
+        // TODO - Middleware to check if user is authorized to update a course
+
+        const course = await Course.getCourseById(req.params.courseId);
+        if (course) {
+            if (validateAgainstSchema(req.body, Course.CourseSchema)) {
+                res.status(400).json({
+                    error: "Request body is not a valid course object"
+                });
+                return;
+            }
+            const updatedCourse = await Course.updateCourseById(req.params.courseId, req.body);
+            res.status(200).json(updatedCourse);
+        } else {
+            res.status(404).json({
+                error: "Requested course ID not found"
+            });
+        }
+    } catch (err) {
+        next(err);
+    }
 }
