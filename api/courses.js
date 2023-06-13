@@ -192,7 +192,9 @@ router.get('/:courseId/roster', reqAuthentication, reqInstructor, async function
         const instructorId = req.jwt.id;
         if (course && await isCourseInstructor(instructorId, req.params.courseId)) {
             const roster = await Course.getCSVofStudentsEnrolledInCourse(req.params.courseId);
-            res.status(200).json(roster);
+            res.setHeader('Content-disposition', 'attachment; filename=roster.csv');
+            res.set('Content-Type', 'text/csv');
+            res.status(200).send(roster);
         } else {
             res.status(404).json({
                 error: "Requested course ID not found"
