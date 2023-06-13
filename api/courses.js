@@ -2,6 +2,8 @@ const { Router } = require('express');
 
 const { Course } = require('../models/course');
 
+const { reqAuthentication } = require('../lib/auth');
+
 const { validateAgainstSchema } = require('../lib/validation');
 
 const router = Router();
@@ -15,10 +17,17 @@ router.get('/', async function (req, res, next) {
     }
 });
 
-router.post('/', async function (req, res, next) {
+
+/**
+ * Creates a new Course with specified data and adds it to the application's database.
+ * Only an authenticated User with 'admin' role can create a new Course.
+ */
+router.post('/', reqAuthentication, async function (req, res, next) {
     try {
 
         // TODO - Middleware to check if user is authorized to create a course
+
+
 
         if (validateAgainstSchema(req.body, Course.CourseSchema)) {
             res.status(400).json({
