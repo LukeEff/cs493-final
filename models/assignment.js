@@ -42,3 +42,14 @@ async function getAssignmentById(assignmentId) {
 }
 
 exports.getAssignmentById = getAssignmentById;
+
+/**
+* Update assignment
+* @param assignmentId - id of assignment to update
+* @returns {Promis<ObjectId*>} - updated assignment
+* 
+*/
+async function updateAssignment(assignmentId) {
+
+}
+exports.updateAssignment = updateAssignment;
