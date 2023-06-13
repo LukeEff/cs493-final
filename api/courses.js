@@ -33,3 +33,18 @@ router.post('/', async function (req, res, next) {
         next(err);
     }
 });
+
+router.get('/:courseId', async function (req, res, next) {
+    try {
+        const course = await Course.getCourseById(req.params.courseId);
+        if (course) {
+            res.status(200).json(course);
+        } else {
+            res.status(404).json({
+                error: "Requested course ID not found"
+            });
+        }
+    } catch (err) {
+        next(err);
+    }
+}
