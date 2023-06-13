@@ -43,6 +43,10 @@ router.post('/', reqAuthentication, reqAdmin, async function (req, res, next) {
     }
 });
 
+/**
+ * Returns summary data about the Course, excluding the list of students enrolled in the course and the list
+ * of Assignments for the course.
+ */
 router.get('/:courseId', async function (req, res, next) {
     try {
         const course = await Course.getCourseById(req.params.courseId);
@@ -58,12 +62,17 @@ router.get('/:courseId', async function (req, res, next) {
     }
 });
 
-router.patch('/:courseId', async function (req, res, next) {
+/**
+ * Performs a partial update on the data for the Course. Note that enrolled students and assignments cannot be
+ * modified via this endpoint. Only an authenticated User with 'admin' role or an authenticated 'instructor'
+ * User whose ID matches the instructorId of the Course can update Course information.
+ */
+router.patch('/:courseId', reqAuthentication, reqInstructor, async function (req, res, next) {
     try {
-        // TODO - Middleware to check if user is authorized to update a course
-
         const course = await Course.getCourseById(req.params.courseId);
-        if (course) {
+        const instructorId = req.jwt.id;
+
+        if (course && await isCourseInstructor(instructorId, req.params.courseId)) {
             if (validateAgainstSchema(req.body, Course.CourseSchema)) {
                 res.status(400).json({
                     error: "Request body is not a valid course object"
@@ -82,10 +91,12 @@ router.patch('/:courseId', async function (req, res, next) {
     }
 });
 
-router.delete('/:courseId', async function (req, res, next) {
+/**
+ * Completely removes the data for the specified Course, including all enrolled students, all Assignments, etc. Only
+ * an authenticated User with 'admin' role can remove a Course.
+ */
+router.delete('/:courseId', reqAuthentication, reqAdmin, async function (req, res, next) {
     try {
-        // TODO - Middleware to check if user is authorized to delete a course
-
         const course = await Course.getCourseById(req.params.courseId);
         if (course) {
             await Course.deleteCourseById(req.params.courseId);
@@ -100,12 +111,17 @@ router.delete('/:courseId', async function (req, res, next) {
     }
 });
 
-router.get('/:courseId/students', async function (req, res, next) {
+/**
+ * Returns a list containing the User IDs of all students currently enrolled in the Course. Only an authenticated
+ * User with 'admin' role or an authenticated 'instructor' User whose ID matches the instructorId of
+ * the Course can fetch the list of enrolled students.
+ */
+router.get('/:courseId/students', reqAuthentication, reqInstructor, async function (req, res, next) {
     try {
-        // TODO - Middleware to check if user is authorized to view students in a course
-
         const course = await Course.getCourseById(req.params.courseId);
-        if (course) {
+        const instructorId = req.jwt.id;
+
+        if (course && await isCourseInstructor(instructorId, req.params.courseId) ) {
             const students = await Course.getStudentsEnrolledInCourse(req.params.courseId);
             res.status(200).json(students);
         } else {
@@ -118,21 +134,35 @@ router.get('/:courseId/students', async function (req, res, next) {
     }
 });
 
-router.post('/:courseId/students', async function (req, res, next) {
+/**
+ * Enrolls and/or unenrolls students from a Course. Only an authenticated User with 'admin' role or an authenticated
+ * 'instructor' User whose ID matches the instructorId of the Course can update the students enrolled in the Course.
+ */
+router.post('/:courseId/students', reqAuthentication, reqInstructor, async function (req, res, next) {
     try {
-        // TODO - Middleware to check if user is authorized to add a student to a course
-
-        if (validateAgainstSchema(req.body, Course.EnrollmentSchema)) {
-            res.status(400).json({
-                error: "Request body is not a valid enrollment object"
-            });
-            return;
-        }
-
         const course = await Course.getCourseById(req.params.courseId);
-        if (course) {
-            const student = await Course.enrollStudentInCourse(req.params.courseId, req.body);
-            res.status(200).json(student);
+        const instructorId = req.jwt.id;
+        const body = req.body;
+
+        if (course && await isCourseInstructor(instructorId, req.params.courseId)) {
+            if (!body["add"] && !body["remove"]) {
+                res.status(400).json({
+                    error: "Request body must contain 'add' and/or 'remove' array(s) of student IDs"
+                });
+                return;
+            }
+
+            if (body["add"]) {
+                for (let i = 0; i < body["add"].length; i++) {
+                    await Course.enrollStudentInCourse(req.params.courseId, body["add"][i]);
+                }
+            }
+            if (body["remove"]) {
+                for (let i = 0; i < body["remove"].length; i++) {
+                    await Course.unenrollStudentInCourse(req.params.courseId, body["remove"][i]);
+                }
+            }
+            res.status(200).json(body);
         } else {
             res.status(404).json({
                 error: "Requested course ID not found"
@@ -178,5 +208,14 @@ router.get('/:courseId/assignments', async function (req, res, next) {
         next(err);
     }
 });
+
+async function isCourseInstructor(instructorId, courseId) {
+    const course = await Course.getCourseById(courseId);
+    if (course) {
+        return course.instructorId === instructorId;
+    } else {
+        return false;
+    }
+}
 
 module.exports = router;
