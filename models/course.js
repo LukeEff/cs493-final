@@ -80,6 +80,7 @@ async function unenrollStudentInCourse(enrollment) {
   return await getDbReference().collection(DB_COLLECTION_NAME_ENROLLMENTS).deleteOne(enrollment);
 }
 
+exports.CourseSchema = CourseSchema;
 exports.createCourse = createCourse;
 exports.getCourseById = getCourseById;
 exports.getAllCourses = getAllCourses;
