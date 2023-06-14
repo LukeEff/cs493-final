@@ -40,41 +40,30 @@ router.post('/', async function (req, res, next) {
  */
 router.post('/login', async function (req, res, next) {
   const { email, password } = req.body;
+
+  if (!email || !password) {
+    res.status(400).json({
+      error: "Request body must contain both an email and password"
+    });
+    return;
+  }
+
   try {
-    const user = await getUserByEmail(email);
-    if (user && user.comparePassword(password)) {
-      const token = user.generateAuthToken();
-      res.status(200).json({ token: token });
-    } else {
+    const jwt = await User.validateUser(email, password)
+
+    if (jwt) {
+      res.status(200).json(jwt)
+    }
+    else {
       res.status(401).json({
         error: "Invalid credentials"
-      });
+      })
     }
+
   } catch (err) {
     next(err);
   }
 });
-
-/*
-* Still need to implement 400 and 500 errors, other than that should be good.
-*/
-// Route to login a user
-router.post('/login', async function (req, res, next) {
-    const { email, password } = req.body
-    const user = await User.findOne({ where: { email: email }})
-    if (user) {
-        if (user.validPassword(password)) {
-            // Respond with a JWT token
-            const token = user.genToken()
-            res.status(200).json({ token: token })
-        } else {
-            res.status(401).json(['Invalid email'])
-        }
-      } else {
-            res.status(401).json(['Invalid password'])
-        }
-});
-
 
 /*
 * Still need to implement getting info on a user given their ID
