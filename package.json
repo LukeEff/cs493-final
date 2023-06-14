@@ -1,4 +1,12 @@
 {
+  "name": "final-project",
+  "version": "1.0.0",
+  "description": "Final Project, resembles an educational platform with students, instructors, admins, courses, etc...",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "initdb": "node InitDb.js"
+  },
   "dependencies": {
     "bcrypt": "^5.1.0",
     "body-parser": "^1.20.2",
