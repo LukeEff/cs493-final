@@ -81,7 +81,12 @@ async function getSubmissionsByAssignmentId(assignmentId, page = 0, numPerPage =
   }).toArray();
 
   // Now use page and numPerPage to determine which results to return
-  return results.slice(page * numPerPage, (page + 1) * numPerPage);
+  return results.slice(page * numPerPage, (page + 1) * numPerPage).map((submission) => {
+    return {
+      ...submission,
+      file: `/media/submissions/${submission._id}`
+    }
+  });
 }
 
 async function uploadSubmissionFile(submission, file) {
@@ -121,13 +126,21 @@ async function doesSubmissionFileExist(submissionId) {
 }
 
 async function createSubmission(submission) {
-    // TODO: File should be a URL to a file download. Could use GRIDFS to store files in MongoDB.
-    return new Promise((resolve) => {
-        submission = extractValidFields(submission, SubmissionSchema);
-        getDbReference().collection(DB_COLLECTION_NAME_SUBMISSIONS).insertOne(submission).then(result => {
-            resolve(result.insertId);
-        });
+  submission = extractValidFields(submission, SubmissionSchema);
+
+  return new Promise((resolve) => {
+    // Extract file and store it in GridFS
+    const file = submission.file;
+
+    // Remove file from submission object, so we can store the rest of the submission in MongoDB
+    delete submission.file;
+
+    getDbReference().collection(DB_COLLECTION_NAME_SUBMISSIONS).insertOne(submission).then(result => {
+      // Upload file to GridFS using the newly created submission ID
+      uploadSubmissionFile(submission, file)
+      resolve(result.insertId);
     });
+  });
 }
 
 exports.doesSubmissionFileExist = doesSubmissionFileExist;
