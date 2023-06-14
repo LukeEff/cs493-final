@@ -19,8 +19,8 @@ router.get('/', async function (req, res, next) {
         const term = req.query.term;
         const subject = req.query.subject;
         const number = req.query.number;
-        const page = parseInt(req.query.page) || 1;
-        const coursesPerPage = (req.query.numPerPage) || 10;
+        const page = parseInt(req.query.page || 0);
+        const coursesPerPage = (req.query.numPerPage || 20);
 
         const courses = await Course.getAllCourses(subject, number, term, page, coursesPerPage);
         res.status(200).json(courses);
