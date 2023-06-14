@@ -139,6 +139,39 @@ router.get('/:assignmentId/submissions', reqAuthentication, reqInstructor, async
 });
 
 /**
+ * Create and store a new Assignment with specified data and adds it to the application's database. Only an
+ * authenticated User with 'student' role who is enrolled in the Course corresponding to the Assignment's
+ * courseId can create a Submission.
+ */
+router.post('/:assignmentId/submissions', reqAuthentication, reqUser, async function (req, res, next) {
+  try {
+    const assignment = await Assignment.getAssignmentById(req.params.assignmentId);
+
+    if (assignment && (await isStudentEnrolled(req.jwt, assignment.courseId))) {
+      if (validateAgainstSchema(req.body, Assignment.SubmissionSchema)) {
+        res.status(400).json({
+          error: "Request body is not a valid submission object"
+        });
+        return;
+      }
+
+      const submission = req.body
+      submission.assignmentId = req.params.assignmentId;
+      submission.studentId = req.jwt._id;
+      submission.timestamp = new Date().getTime();
+      const submissionRes = await Assignment.createSubmission(submission);
+      res.status(201).json(submissionRes);
+    } else {
+      res.status(404).json({
+        error: "Requested assignment ID not found"
+      });
+    }
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * Checks if the course with specified ID has an instructor with specified ID
  * @param jwt JWT of user making request
  * @param courseId ID of course to check
@@ -153,6 +186,20 @@ async function isCourseInstructor(jwt, courseId) {
   const course = await Course.getCourseById(courseId);
   if (course) {
     return course.instructorId === instructorId;
+  } else {
+    return false;
+  }
+}
+
+async function isStudentEnrolled(jwt, courseId) {
+  const studentId = jwt._id;
+  const role = jwt.role;
+  if (role === ROLES.ADMIN) {
+    return true;
+  }
+  const studentsEnrolled = await Course.getStudentsEnrolledInCourse(courseId)
+  if (studentsEnrolled) {
+    return studentsEnrolled.includes(studentId);
   } else {
     return false;
   }

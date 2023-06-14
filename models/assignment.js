@@ -82,5 +82,15 @@ async function getSubmissionsByAssignmentId(assignmentId, page = 0, numPerPage =
     return results.slice(page * numPerPage, (page + 1) * numPerPage);
 }
 
+async function createSubmission(submission) {
+    return new Promise((resolve) => {
+        submission = extractValidFields(submission, SubmissionSchema);
+        getDbReference().collection(DB_COLLECTION_NAME_SUBMISSIONS).insertOne(submission).then(result => {
+            resolve(result.insertId);
+        });
+    });
+}
+
+exports.createSubmission = createSubmission;
 exports.getSubmissionsByAssignmentId = getSubmissionsByAssignmentId;
 exports.deleteAssignment = deleteAssignment;
