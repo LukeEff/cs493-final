@@ -97,7 +97,7 @@ async function getCSVofStudentsEnrolledInCourse(courseId) {
   const studentIds = students.map(student => student.studentId);
   const studentObjects = await getDbReference().collection('users').find({_id: {$in: studentIds}}).toArray();
   return studentObjects.map(student =>
-      student.userId + ',' + student.name + ',' + student.email
+      student._id + ',' + student.name + ',' + student.email
   ).join('\n');
 }
 

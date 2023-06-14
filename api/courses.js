@@ -180,8 +180,6 @@ router.post('/:courseId/students', reqAuthentication, reqInstructor, async funct
  * Returns a CSV file containing information about all of the students currently enrolled in the Course,
  * including names, IDs, and email addresses. Only an authenticated User with 'admin' role or an authenticated
  * 'instructor' User whose ID matches the instructorId of the Course can fetch the course roster.
- *
- * // TODO: Need to verify that the CSV file is being returned correctly
  */
 router.get('/:courseId/roster', reqAuthentication, reqInstructor, async function (req, res, next) {
     try {
