@@ -99,14 +99,13 @@ router.get('/:id', reqAuthentication, reqUser, async function (req, res, next) {
   try {
     const user = await getUserById(id);
     if (user) {
-      res.status(200).json(user);
-
       if (user.role === ROLES.INSTRUCTOR) {
         user.courses = await Course.getCourseIdsByInstructorId(id)
       }
       else if (user.role === ROLES.STUDENT) {
         user.courses = await Course.getCourseIdsEnrolledByStudent(id)
       }
+      res.status(200).json(user);
     } else {
       res.status(404).json({
         error: "Requested user ID not found"
