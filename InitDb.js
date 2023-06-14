@@ -21,6 +21,8 @@ const { connectToDb, getDbReference, closeDbConnection } = require('./lib/mongo'
 const mongoCreateUser = process.env.MONGO_CREATE_USER
 const mongoCreatePassword = process.env.MONGO_CREATE_PASSWORD
 
+console.log("== Calling connectToDb")
+
 connectToDb(async function () {
   /*
    * Insert initial business data into the database
