@@ -18,6 +18,10 @@
 
 const { connectToDb, getDbReference, closeDbConnection } = require('./lib/mongo')
 
+const sampleUsers = require('./data/sample-users.json')
+
+const { insertBulkUsers } = require('./models/user')
+
 const mongoCreateUser = process.env.MONGO_CREATE_USER
 const mongoCreatePassword = process.env.MONGO_CREATE_PASSWORD
 
@@ -25,9 +29,10 @@ console.log("== Calling connectToDb")
 
 connectToDb(async function () {
   /*
-   * Insert initial business data into the database
+   * Insert initial user data into the database.
    */
-  console.log("== TODO: insert initial data for users, instructors, and courses")
+  const ids = await insertBulkUsers(sampleUsers)
+  console.log("== Inserted users with IDs:", ids)
 
   /*
    * Create a new, lower-privileged database user if the correct environment
@@ -41,7 +46,9 @@ connectToDb(async function () {
       })
       console.log("== New user created:", result)
     } catch (err) {
-      console.error("== Failed to create user:", err)
+      // This error will occur if the user already exists in the database.
+      console.log("== Did not create user")
+      // console.error("== Failed to create user:", err)
     }
   }
 

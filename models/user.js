@@ -77,6 +77,23 @@ async function generateJWT(user) {
   }, process.env.JWT_SECRET, { expiresIn: '24h' })
 }
 
+async function insertBulkUsers(users) {
+  console.log("Inserting bulk users: ", users);
+  const usersToInsert = users.map(user => {
+    user = extractValidFields(user, UserSchema);
+    user.role ??= ROLES.USER;
+    return user;
+  });
+  try {
+    const results = await getDbReference().collection(DB_COLLECTION_NAME).insertMany(usersToInsert);
+    console.log("Inserted bulk users: ", results.insertedIds);
+    return results.insertedIds;
+  } catch (e) {
+    console.log("Could not insert bulk users, probably because they already exist: ");
+  }
+}
+
+exports.insertBulkUsers = insertBulkUsers;
 exports.ROLES = ROLES;
 exports.UserSchema = UserSchema;
 exports.createUser = createUser;
