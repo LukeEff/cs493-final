@@ -10,8 +10,8 @@
     "_id": "1",
     "name": "leia",
     "email": "leia@example.com",
-    "password": "12345678",
-    "role": "hunter2"
+    "password": "hunter2",
+    "role": "instructor"
   },
   {
     "_id": "2",

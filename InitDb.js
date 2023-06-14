@@ -36,7 +36,7 @@ connectToDb(async function () {
   const db = getDbReference()
   const collection = db.collection("users")
   await collection.drop()
-   */
+  */
 
   // Require email to be unique.
   await initIndexes()

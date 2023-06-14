@@ -78,10 +78,10 @@ router.post('/login', async function (req, res, next) {
  * User). If the User has the 'student' role, the response should include a list of the IDs of the Courses the User
  * is enrolled in. Only an authenticated User whose ID matches the ID of the requested User can fetch this information.
  */
-router.get('/:userId', reqAuthentication, reqUser, async function (req, res, next) {
-  const userId = req.params.userId;
+router.get('/:id', reqAuthentication, reqUser, async function (req, res, next) {
+  const id = req.params.id;
 
-  if (!userId) {
+  if (!id) {
     res.status(400).json({
       error: "Request body must contain a user ID"
     });
@@ -89,7 +89,7 @@ router.get('/:userId', reqAuthentication, reqUser, async function (req, res, nex
   }
 
   // Users can only access their own information (unless they are an admin)
-  if (!isAdmin(req) && req.jwt.id !== userId) {
+  if (!isAdmin(req) && req.jwt.id !== id) {
     res.status(403).json({
       error: "Unauthorized to access the specified resource"
     });
@@ -97,15 +97,15 @@ router.get('/:userId', reqAuthentication, reqUser, async function (req, res, nex
   }
 
   try {
-    const user = await getUserById(userId);
+    const user = await getUserById(id);
     if (user) {
       res.status(200).json(user);
 
       if (user.role === ROLES.INSTRUCTOR) {
-        user['courses'] = await Course.getCourseIdsByInstructorId(userId)
+        user['courses'] = await Course.getCourseIdsByInstructorId(id)
       }
       else if (user.role === ROLES.STUDENT) {
-        user['courses'] = await Course.getCourseIdsEnrolledByStudent(userId)
+        user['courses'] = await Course.getCourseIdsEnrolledByStudent(id)
       }
     } else {
       res.status(404).json({
