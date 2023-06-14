@@ -85,7 +85,7 @@ router.patch('/:courseId', reqAuthentication, reqInstructor, async function (req
                 return;
             }
             const updatedCourse = await Course.updateCourseById(req.params.courseId, req.body);
-            res.status(200).json(updatedCourse);
+            res.status(200).json(await Course.getCourseById(req.params.courseId));
         } else {
             res.status(404).json({
                 error: "Requested course ID not found"
