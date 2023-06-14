@@ -1,9 +1,11 @@
-const { ObjectId } = require('mongodb');
+const { ObjectId, GridFSBucket } = require('mongodb');
 const { getDbReference } = require('../lib/mongo');
 const { extractValidFields } = require('../lib/validation');
+const { fs } = require('fs');
 
 const DB_COLLECTION_NAME = 'assignments';
 const DB_COLLECTION_NAME_SUBMISSIONS = 'submissions';
+const DB_SUBMISSION_FILE_BUCKET_NAME = 'submissions';
 
 const AssignmentSchema = {
     _id: { required: true, unique: true },
@@ -74,15 +76,38 @@ async function deleteAssignment(assignmentId) {
 }
 
 async function getSubmissionsByAssignmentId(assignmentId, page = 0, numPerPage = 20) {
-    const results = await getDbReference().collection(DB_COLLECTION_NAME_SUBMISSIONS).find({
-        assignmentId: assignmentId
-    }).toArray();
+  const results = await getDbReference().collection(DB_COLLECTION_NAME_SUBMISSIONS).find({
+    assignmentId: assignmentId
+  }).toArray();
 
-    // Now use page and numPerPage to determine which results to return
-    return results.slice(page * numPerPage, (page + 1) * numPerPage);
+  // Now use page and numPerPage to determine which results to return
+  return results.slice(page * numPerPage, (page + 1) * numPerPage);
+}
+
+async function uploadSubmissionFile(submission, file) {
+  return new Promise((resolve, reject) => {
+    const bucket = new GridFSBucket(getDbReference(), { bucketName: DB_SUBMISSION_FILE_BUCKET_NAME });
+    const metadata = {
+            contentType: file.contentType,
+        };
+
+    fs.createReadStream(file.path).pipe(bucket.openUploadStreamWithId(
+      new ObjectId(submission._id),
+        file.filename, { metadata: metadata, chunkSizeBytes: 512 })
+        .on('finish', () => {
+          console.log("Finished uploading file");
+          resolve(submission._id);
+        })
+        .on('error', (err) => {
+          console.log("Error uploading file");
+          reject(err);
+        })
+    )}
+  );
 }
 
 async function createSubmission(submission) {
+    // TODO: File should be a URL to a file download. Could use GRIDFS to store files in MongoDB.
     return new Promise((resolve) => {
         submission = extractValidFields(submission, SubmissionSchema);
         getDbReference().collection(DB_COLLECTION_NAME_SUBMISSIONS).insertOne(submission).then(result => {

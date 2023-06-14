@@ -2,7 +2,7 @@ const { Router } = require('express');
 
 const { Assignment } = require('../models/assignment');
 
-const { reqAuthentication, reqAdmin, reqInstructor, reqUser } = require('../lib/auth');
+const { reqAuthentication, reqInstructor, reqUser } = require('../lib/auth');
 
 const { ROLES } = require('../models/user');
 
