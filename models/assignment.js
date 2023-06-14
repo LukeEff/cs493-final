@@ -62,7 +62,8 @@ exports.getAssignmentById = getAssignmentById;
 * 
 */
 async function updateAssignment(assignmentId) {
-
+    const results = await getDbReference().collection(DB_COLLECTION_NAME).updateOne({_id: new ObjectId(assignmentId) });
+    return results;
 }
 exports.updateAssignment = updateAssignment;
 
@@ -70,9 +71,11 @@ exports.updateAssignment = updateAssignment;
 * Delete an assignment
 * @param courseId - id of assignment to delete
 * @returns {Promise<*>} - confirm deleted assignment
+ * Do we want to delete submissions for this assignment as well?
 */
 async function deleteAssignment(assignmentId) {
-
+    const results = await getDbReference().collection(DB_COLLECTION_NAME).deleteOne({_id: new ObjectId(assignmentId) });
+    return results;
 }
 
 async function getSubmissionsByAssignmentId(assignmentId, page = 0, numPerPage = 20) {
