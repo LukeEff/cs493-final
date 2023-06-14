@@ -113,6 +113,13 @@ async function downloadSubmissionFileById(submissionId, outputFile) {
   downloadStream.pipe(outputFile);
 }
 
+async function doesSubmissionFileExist(submissionId) {
+  const db = getDbReference();
+  const bucket = new GridFSBucket(db, { bucketName: DB_SUBMISSION_FILE_BUCKET_NAME });
+  const results = await bucket.find({ _id: new ObjectId(submissionId) }).toArray();
+  return results.length > 0;
+}
+
 async function createSubmission(submission) {
     // TODO: File should be a URL to a file download. Could use GRIDFS to store files in MongoDB.
     return new Promise((resolve) => {
@@ -123,6 +130,9 @@ async function createSubmission(submission) {
     });
 }
 
+exports.doesSubmissionFileExist = doesSubmissionFileExist;
+exports.uploadSubmissionFile = uploadSubmissionFile;
+exports.downloadSubmissionFileById = downloadSubmissionFileById;
 exports.SubmissionSchema = SubmissionSchema;
 exports.createSubmission = createSubmission;
 exports.getSubmissionsByAssignmentId = getSubmissionsByAssignmentId;
