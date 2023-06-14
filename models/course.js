@@ -62,6 +62,16 @@ async function getAllCourses(subject, number, term, page = 0, numPerPage = 20) {
   return results.slice(page * numPerPage, (page + 1) * numPerPage);
 }
 
+async function getCourseIdsByInstructorId(instructorId) {
+  const results = await getDbReference().collection(DB_COLLECTION_NAME).find({ instructorId: instructorId }).toArray();
+  return results.map(result => result._id);
+}
+
+async function getCourseIdsEnrolledByStudent(userId) {
+  const results = await getDbReference().collection(DB_COLLECTION_NAME_ENROLLMENTS).find({ studentId: userId }).toArray();
+  return results.map(result => result.courseId);
+}
+
 async function updateCourseById(courseId, course) {
   course = extractValidFields(course, CourseSchema);
   return await getDbReference().collection(DB_COLLECTION_NAME).updateOne({ _id: new ObjectId(courseId) }, { $set: course });
@@ -114,3 +124,5 @@ exports.getCSVofStudentsEnrolledInCourse = getCSVofStudentsEnrolledInCourse;
 exports.enrollStudentInCourse = enrollStudentInCourse;
 exports.unenrollStudentInCourse = unenrollStudentInCourse;
 exports.getAssignmentsForCourse = getAssignmentsForCourse;
+exports.getCourseIdsByInstructorId = getCourseIdsByInstructorId;
+exports.getCourseIdsEnrolledByStudent = getCourseIdsEnrolledByStudent;

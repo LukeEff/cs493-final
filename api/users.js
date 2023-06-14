@@ -2,9 +2,11 @@ const { Router } = require('express')
 
 const { User } = require('../models/user')
 
-const { reqAuthentication, reqAdmin, reqUser, reqInstructor, isAdmin } = require('../lib/auth')
+const { Course } = require('../models/course')
 
-const { UserSchema, createUser, getUserById, getUserByEmail } = require('../models/user')
+const { reqAuthentication, reqUser, isAdmin } = require('../lib/auth')
+
+const { createUser, getUserById } = require('../models/user')
 
 const router = Router()
 
@@ -60,6 +62,51 @@ router.post('/login', async function (req, res, next) {
       })
     }
 
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Returns information about the specified User. If the User has the 'instructor' role, the response should include a
+ * list of the IDs of the Courses the User teaches (i.e. Courses whose instructorId field matches the ID of this
+ * User). If the User has the 'student' role, the response should include a list of the IDs of the Courses the User
+ * is enrolled in. Only an authenticated User whose ID matches the ID of the requested User can fetch this information.
+ */
+router.get('/:userId', reqAuthentication, reqUser, async function (req, res, next) {
+  const userId = req.params.userId;
+
+  if (!userId) {
+    res.status(400).json({
+      error: "Request body must contain a user ID"
+    });
+    return;
+  }
+
+  // Users can only access their own information (unless they are an admin)
+  if (!isAdmin(req) && req.jwt.id !== userId) {
+    res.status(403).json({
+      error: "Unauthorized to access the specified resource"
+    });
+    return;
+  }
+
+  try {
+    const user = await getUserById(userId);
+    if (user) {
+      res.status(200).json(user);
+
+      if (user.role === User.ROLES.INSTRUCTOR) {
+        user['courses'] = await Course.getCourseIdsByInstructorId(userId)
+      }
+      else if (user.role === User.ROLES.USER) {
+        user['courses'] = await Course.getCourseIdsEnrolledByStudent(userId)
+      }
+    } else {
+      res.status(404).json({
+        error: "Requested user ID not found"
+      });
+    }
   } catch (err) {
     next(err);
   }
