@@ -106,6 +106,11 @@ async function enrollStudentInCourse(courseId, studentId) {
     courseId: courseId,
     studentId: studentId
   }
+  // Skip double enrollment
+  const existingEnrollment = await getDbReference().collection(DB_COLLECTION_NAME_ENROLLMENTS).find(enrollment).toArray();
+  if (existingEnrollment.length > 0) {
+    return existingEnrollment[0];
+  }
   enrollment = extractValidFields(enrollment, EnrollmentSchema);
   return await getDbReference().collection(DB_COLLECTION_NAME_ENROLLMENTS).insertOne(enrollment);
 }
@@ -114,6 +119,11 @@ async function unenrollStudentInCourse(courseId, studentId) {
   let enrollment = {
     courseId: courseId,
     studentId: studentId
+  }
+  // Skip if not enrolled
+  const existingEnrollment = await getDbReference().collection(DB_COLLECTION_NAME_ENROLLMENTS).find(enrollment).toArray();
+  if (existingEnrollment.length === 0) {
+    return null;
   }
   enrollment = extractValidFields(enrollment, EnrollmentSchema);
   return await getDbReference().collection(DB_COLLECTION_NAME_ENROLLMENTS).deleteOne(enrollment);
