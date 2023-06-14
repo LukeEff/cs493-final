@@ -2,85 +2,114 @@ const { Router } = require('express')
 
 const { User } = require('../models/user')
 
-const {
-    UserSchema,
-    createUser,
-    getUserById,
-    getUserByEmail,
-    validateUser
-} = require('../models/user')
+const { Course } = require('../models/course')
 
-const reqAuthentication = require('../lib/auth')
+const { reqAuthentication, reqUser, isAdmin } = require('../lib/auth')
+
+const { createUser, getUserById } = require('../models/user')
 
 const router = Router()
 
 
-/*
-* Creating a user should be good.  Delete when checked
-*/
-// Create a new user
+/**
+ * Create and store a new application User with specified data and adds it to the application's database. Only an
+ * authenticated User with 'admin' role can create users with the 'admin' or 'instructor' roles.
+ */
 router.post('/', async function (req, res, next) {
-    if (!admin(req) && req.body.admin) {
-        res.status(403).json({
-        error: `Only admins can create admins.`
-        })
-        return
-    }
-    try {
-        const user = await createUser(req.body)
-        res.status(201).json(user)
-    } catch (err) {
-        if (err instanceof ValidationError) {
-            const messages = err.errors.map(e => e.message)
-            res.status(400).json(messages)
-        } else {
-            next(err)
-        }
-    }
-})
+  const desiredRole = req.body.role;
 
-/*
-* Still need to implement 400 and 500 errors, other than that should be good.
-*/
-// Route to login a user
-router.post('/login', async function (req, res, next) {
-    const { email, password } = req.body
-    const user = await User.findOne({ where: { email: email }})
-    if (user) {
-        if (user.validPassword(password)) {
-            // Respond with a JWT token
-            const token = user.genToken()
-            res.status(200).json({ token: token })
-        } else {
-            res.status(401).json(['Invalid email'])
-        }
-      } else {
-            res.status(401).json(['Invalid password'])
-        }
+  // Ensure permissions are not being violated
+  if (desiredRole === User.ROLES.ADMIN || desiredRole === User.ROLES.INSTRUCTOR) {
+    if (!isAdmin(req)) {
+      res.status(403).json({
+        error: `Only admins can create users with the '${desiredRole}' role.`
+      });
+      return
+    }
+  }
+
+  // Attempt to create the user
+  try {
+    const user = await createUser(req.body);
+    res.status(201).json(user);
+  } catch (err) {
+    res.status(400).json(err);
+  }
 });
 
+/**
+ * Authenticate a specific User with their email address and password.
+ */
+router.post('/login', async function (req, res, next) {
+  const { email, password } = req.body;
 
-/*
-* Still need to implement getting info on a user given their ID
-*/
+  if (!email || !password) {
+    res.status(400).json({
+      error: "Request body must contain both an email and password"
+    });
+    return;
+  }
 
-function authorized(req) {
-    const authHeader = req.headers.authorization
-    const auth = authHeader && authHeader.split(' ')[1]
-    if (!auth) {
-        return false
+  try {
+    const jwt = await User.validateUser(email, password)
+
+    if (jwt) {
+      res.status(200).json(jwt)
     }
-    try {
-        req.auth = jsonwebtoken.verify(auth, process.env.JWT_SECRET)
-        return true
+    else {
+      res.status(401).json({
+        error: "Invalid credentials"
+      })
     }
-    catch (e) {
-        return false
+
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Returns information about the specified User. If the User has the 'instructor' role, the response should include a
+ * list of the IDs of the Courses the User teaches (i.e. Courses whose instructorId field matches the ID of this
+ * User). If the User has the 'student' role, the response should include a list of the IDs of the Courses the User
+ * is enrolled in. Only an authenticated User whose ID matches the ID of the requested User can fetch this information.
+ */
+router.get('/:userId', reqAuthentication, reqUser, async function (req, res, next) {
+  const userId = req.params.userId;
+
+  if (!userId) {
+    res.status(400).json({
+      error: "Request body must contain a user ID"
+    });
+    return;
+  }
+
+  // Users can only access their own information (unless they are an admin)
+  if (!isAdmin(req) && req.jwt.id !== userId) {
+    res.status(403).json({
+      error: "Unauthorized to access the specified resource"
+    });
+    return;
+  }
+
+  try {
+    const user = await getUserById(userId);
+    if (user) {
+      res.status(200).json(user);
+
+      if (user.role === User.ROLES.INSTRUCTOR) {
+        user['courses'] = await Course.getCourseIdsByInstructorId(userId)
+      }
+      else if (user.role === User.ROLES.USER) {
+        user['courses'] = await Course.getCourseIdsEnrolledByStudent(userId)
+      }
+    } else {
+      res.status(404).json({
+        error: "Requested user ID not found"
+      });
     }
-}
-  
-function admin(req) {
-    return authorized(req) && req.jwt.admin
-}
-  
-  module.exports = router
+  } catch (err) {
+    next(err);
+  }
+});
+
+module.exports = router
