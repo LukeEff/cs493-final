@@ -35,10 +35,14 @@ connectToDb(async function () {
    */
   if (mongoCreateUser && mongoCreatePassword) {
     const db = getDbReference()
-    const result = await db.addUser(mongoCreateUser, mongoCreatePassword, {
-      roles: "readWrite"
-    })
-    console.log("== New user created:", result)
+    try {
+      const result = await db.addUser(mongoCreateUser, mongoCreatePassword, {
+        roles: "readWrite"
+      })
+      console.log("== New user created:", result)
+    } catch (err) {
+      console.error("== Failed to create user:", err)
+    }
   }
 
   closeDbConnection(function () {
