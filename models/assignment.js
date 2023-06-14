@@ -3,6 +3,7 @@ const { getDbReference } = require('../lib/mongo');
 const { extractValidFields } = require('../lib/validation');
 
 const DB_COLLECTION_NAME = 'assignments';
+const DB_COLLECTION_NAME_SUBMISSIONS = 'submissions';
 
 const AssignmentSchema = {
     _id: { required: true, unique: true },
@@ -10,7 +11,16 @@ const AssignmentSchema = {
     title: { required: true },
     points: { required: true },
     due: { required: true }
-  }
+}
+
+const SubmissionSchema = {
+    _id: { required: true, unique: true },
+    assignmentId: { required: true },
+    studentId: { required: true },
+    timestamp: { required: true },
+    file: { required: true },
+    grade: { required: false }
+}
 
 exports.AssignmentSchema = AssignmentSchema;
 
@@ -62,4 +72,15 @@ exports.updateAssignment = updateAssignment;
 async function deleteAssignment(assignmentId) {
 
 }
+
+async function getSubmissionsByAssignmentId(assignmentId, page = 0, numPerPage = 20) {
+    const results = await getDbReference().collection(DB_COLLECTION_NAME_SUBMISSIONS).find({
+        assignmentId: assignmentId
+    }).toArray();
+
+    // Now use page and numPerPage to determine which results to return
+    return results.slice(page * numPerPage, (page + 1) * numPerPage);
+}
+
+exports.getSubmissionsByAssignmentId = getSubmissionsByAssignmentId;
 exports.deleteAssignment = deleteAssignment;

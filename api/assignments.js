@@ -113,6 +113,32 @@ router.delete('/:assignmentId', reqAuthentication, reqInstructor, async function
 });
 
 /**
+ * Returns the list of all Submissions for an Assignment. This list should be paginated. Only an authenticated User
+ * with 'admin' role or an authenticated 'instructor' User whose ID matches the instructorId of the Course
+ * corresponding to the Assignment's courseId can fetch the Submissions for an Assignment.
+ *
+ * // TODO verify that parsing and validating query parameters is correct
+ */
+router.get('/:assignmentId/submissions', reqAuthentication, reqInstructor, async function (req, res, next) {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const numPerPage = parseInt(req.query.perPage) || 10;
+    const assignment = await Assignment.getAssignmentById(req.params.assignmentId);
+
+    if (assignment && (await isCourseInstructor(req.jwt, assignment.courseId))) {
+      const submissions = await Assignment.getSubmissionsByAssignmentId(req.params.assignmentId, page, numPerPage);
+      res.status(200).json(submissions);
+    } else {
+      res.status(404).json({
+        error: "Requested assignment ID not found"
+      });
+    }
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * Checks if the course with specified ID has an instructor with specified ID
  * @param jwt JWT of user making request
  * @param courseId ID of course to check
