@@ -106,6 +106,13 @@ async function uploadSubmissionFile(submission, file) {
   );
 }
 
+async function downloadSubmissionFileById(submissionId, outputFile) {
+  const db = getDbReference();
+  const bucket = new GridFSBucket(db, { bucketName: DB_SUBMISSION_FILE_BUCKET_NAME });
+  const downloadStream = bucket.openDownloadStream(new ObjectId(submissionId));
+  downloadStream.pipe(outputFile);
+}
+
 async function createSubmission(submission) {
     // TODO: File should be a URL to a file download. Could use GRIDFS to store files in MongoDB.
     return new Promise((resolve) => {
