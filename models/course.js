@@ -101,12 +101,20 @@ async function getCSVofStudentsEnrolledInCourse(courseId) {
   ).join('\n');
 }
 
-async function enrollStudentInCourse(enrollment) {
-enrollment = extractValidFields(enrollment, EnrollmentSchema);
+async function enrollStudentInCourse(courseId, studentId) {
+  let enrollment = {
+    courseId: courseId,
+    studentId: studentId
+  }
+  enrollment = extractValidFields(enrollment, EnrollmentSchema);
   return await getDbReference().collection(DB_COLLECTION_NAME_ENROLLMENTS).insertOne(enrollment);
 }
 
-async function unenrollStudentInCourse(enrollment) {
+async function unenrollStudentInCourse(courseId, studentId) {
+  let enrollment = {
+    courseId: courseId,
+    studentId: studentId
+  }
   enrollment = extractValidFields(enrollment, EnrollmentSchema);
   return await getDbReference().collection(DB_COLLECTION_NAME_ENROLLMENTS).deleteOne(enrollment);
 }
