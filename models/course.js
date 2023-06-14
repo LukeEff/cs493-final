@@ -11,6 +11,7 @@ const EnrollmentSchema = {
 }
 
 const CourseSchema = {
+  _id: { required: true, unique: true },
   subject: { required: true },
   number: { required: true },
   title: { required: true },

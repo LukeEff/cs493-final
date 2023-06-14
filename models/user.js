@@ -21,13 +21,17 @@ const UserSchema = {
   role: { required: true }
 }
 
+async function initIndexes() {
+  await getDbReference().collection(DB_COLLECTION_NAME).createIndex({ email: 1 }, { unique: true });
+}
+
 /**
  * Creates a new user in the database
  * @param user - the user schema to create
  * @returns {Promise<unknown>} - the id of the created user
  */
 async function createUser(user) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     user = extractValidFields(user, UserSchema);
 
     // Encrypt password
@@ -37,7 +41,11 @@ async function createUser(user) {
     user.role ??= ROLES.USER;
     getDbReference().collection(DB_COLLECTION_NAME).insertOne(user).then(result => {
       resolve(result.insertedId);
-    });
+    }).catch(
+      err => {
+        reject(err);
+      }
+    );
   });
 }
 
@@ -99,6 +107,7 @@ async function insertBulkUsers(users, dropPrevMatchingId = true) {
   }
 }
 
+exports.initIndexes = initIndexes;
 exports.insertBulkUsers = insertBulkUsers;
 exports.ROLES = ROLES;
 exports.UserSchema = UserSchema;

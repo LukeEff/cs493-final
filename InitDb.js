@@ -20,7 +20,7 @@ const { connectToDb, getDbReference, closeDbConnection } = require('./lib/mongo'
 
 const sampleUsers = require('./data/sample-users.json')
 
-const { insertBulkUsers } = require('./models/user')
+const { insertBulkUsers, initIndexes } = require('./models/user')
 
 const mongoCreateUser = process.env.MONGO_CREATE_USER
 const mongoCreatePassword = process.env.MONGO_CREATE_PASSWORD
@@ -31,6 +31,15 @@ connectToDb(async function () {
   /*
    * Insert initial user data into the database.
    */
+
+  /*
+  const db = getDbReference()
+  const collection = db.collection("users")
+  await collection.drop()
+   */
+
+  // Require email to be unique.
+  await initIndexes()
   const ids = await insertBulkUsers(sampleUsers)
   console.log("== Inserted users with IDs:", ids)
 

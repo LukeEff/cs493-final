@@ -31,7 +31,13 @@ router.post('/', async function (req, res, next) {
     const user = await createUser(req.body);
     res.status(201).json(user);
   } catch (err) {
-    res.status(400).json(err);
+    if (err.code === 11000) {
+      res.status(400).json({
+        error: "Email already in use"
+      });
+    } else {
+      res.status(400).json(err);
+    }
   }
 });
 
