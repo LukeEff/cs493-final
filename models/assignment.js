@@ -91,6 +91,7 @@ async function createSubmission(submission) {
     });
 }
 
+exports.SubmissionSchema = SubmissionSchema;
 exports.createSubmission = createSubmission;
 exports.getSubmissionsByAssignmentId = getSubmissionsByAssignmentId;
 exports.deleteAssignment = deleteAssignment;
