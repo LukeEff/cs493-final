@@ -2,7 +2,7 @@ const { Router } = require('express')
 
 const { ROLES, validateUser, createUser, getUserById } = require('../models/user')
 
-const { Course } = require('../models/course')
+const Course = require('../models/course')
 
 const { reqAuthentication, reqUser, isAdmin } = require('../lib/auth')
 
@@ -102,10 +102,10 @@ router.get('/:id', reqAuthentication, reqUser, async function (req, res, next) {
       res.status(200).json(user);
 
       if (user.role === ROLES.INSTRUCTOR) {
-        user['courses'] = await Course.getCourseIdsByInstructorId(id)
+        user.courses = await Course.getCourseIdsByInstructorId(id)
       }
       else if (user.role === ROLES.STUDENT) {
-        user['courses'] = await Course.getCourseIdsEnrolledByStudent(id)
+        user.courses = await Course.getCourseIdsEnrolledByStudent(id)
       }
     } else {
       res.status(404).json({

@@ -58,6 +58,7 @@ async function getAllCourses(subject, number, term, page = 0, numPerPage = 20) {
   if (number) query.number = number;
   if (term) query.term = term;
   const results = await getDbReference().collection(DB_COLLECTION_NAME).find(query).toArray();
+  console.log(results);
 
   // Less efficient, but less complicated
   return results.slice(page * numPerPage, (page + 1) * numPerPage);
@@ -65,6 +66,7 @@ async function getAllCourses(subject, number, term, page = 0, numPerPage = 20) {
 
 async function getCourseIdsByInstructorId(instructorId) {
   const results = await getDbReference().collection(DB_COLLECTION_NAME).find({ instructorId: instructorId }).toArray();
+  console.log(results);
   return results.map(result => result._id);
 }
 
