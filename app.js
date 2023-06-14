@@ -20,15 +20,10 @@ const rateLimit = require('./lib/ratelimit')
  */
 app.use('/', rateLimit, api)
 
-app.use('*', function (req, res, next) {
+app.use('*', rateLimit, function (req, res, next) {
   res.status(404).json({
     error: "Requested resource " + req.originalUrl + " does not exist"
   })
-})
-
-
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
 })
 
 connectToDb(function () {
