@@ -1,12 +1,10 @@
 const { Router } = require('express')
 
-const { User } = require('../models/user')
+const { ROLES, validateUser, createUser, getUserById } = require('../models/user')
 
 const { Course } = require('../models/course')
 
 const { reqAuthentication, reqUser, isAdmin } = require('../lib/auth')
-
-const { createUser, getUserById } = require('../models/user')
 
 const router = Router()
 
@@ -19,7 +17,7 @@ router.post('/', async function (req, res, next) {
   const desiredRole = req.body.role;
 
   // Ensure permissions are not being violated
-  if (desiredRole === User.ROLES.ADMIN || desiredRole === User.ROLES.INSTRUCTOR) {
+  if (desiredRole === ROLES.ADMIN || desiredRole === ROLES.INSTRUCTOR) {
     if (!isAdmin(req)) {
       res.status(403).json({
         error: `Only admins can create users with the '${desiredRole}' role.`
@@ -51,7 +49,7 @@ router.post('/login', async function (req, res, next) {
   }
 
   try {
-    const jwt = await User.validateUser(email, password)
+    const jwt = await validateUser(email, password)
 
     if (jwt) {
       res.status(200).json(jwt)
@@ -96,10 +94,10 @@ router.get('/:userId', reqAuthentication, reqUser, async function (req, res, nex
     if (user) {
       res.status(200).json(user);
 
-      if (user.role === User.ROLES.INSTRUCTOR) {
+      if (user.role === ROLES.INSTRUCTOR) {
         user['courses'] = await Course.getCourseIdsByInstructorId(userId)
       }
-      else if (user.role === User.ROLES.USER) {
+      else if (user.role === ROLES.STUDENT) {
         user['courses'] = await Course.getCourseIdsEnrolledByStudent(userId)
       }
     } else {

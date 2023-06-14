@@ -10,6 +10,7 @@ const ROLES = {
   ADMIN: 'admin',
   USER: 'user',
   INSTRUCTOR: 'instructor',
+  STUDENT: 'student'
 }
 
 const UserSchema = {
