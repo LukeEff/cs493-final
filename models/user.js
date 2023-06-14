@@ -1,7 +1,7 @@
 const { ObjectId } = require('mongodb');
 const { getDbReference } = require('../lib/mongo');
 const { extractValidFields } = require('../lib/validation');
-const { jwt } = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 const bcrypt = require("bcrypt")
 
 const DB_COLLECTION_NAME = 'users';
@@ -78,14 +78,19 @@ async function generateJWT(user) {
   }, process.env.JWT_SECRET, { expiresIn: '24h' })
 }
 
-async function insertBulkUsers(users) {
+async function insertBulkUsers(users, dropPrevMatchingId = true) {
   console.log("Inserting bulk users: ", users);
   const usersToInsert = users.map(user => {
     user = extractValidFields(user, UserSchema);
-    user.role ??= ROLES.USER;
+    user.role ??= ROLES.STUDENT;
+    user.password = bcrypt.hashSync(user.password, bcrypt.genSaltSync());
     return user;
   });
   try {
+    if (dropPrevMatchingId) {
+      await getDbReference().collection(DB_COLLECTION_NAME).deleteMany({ _id: { $in: usersToInsert.map(user => user._id) } });
+    }
+
     const results = await getDbReference().collection(DB_COLLECTION_NAME).insertMany(usersToInsert);
     console.log("Inserted bulk users: ", results.insertedIds);
     return results.insertedIds;

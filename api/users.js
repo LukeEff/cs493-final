@@ -39,7 +39,8 @@ router.post('/', async function (req, res, next) {
  * Authenticate a specific User with their email address and password.
  */
 router.post('/login', async function (req, res, next) {
-  const { email, password } = req.body;
+  const email = req.body.email;
+  const password = req.body.password;
 
   if (!email || !password) {
     res.status(400).json({

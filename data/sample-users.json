@@ -18,6 +18,6 @@
     "name": "han",
     "email": "han@example.com",
     "password": "hunter2",
-    "role": "user"
+    "role": "student"
   }
 ]
