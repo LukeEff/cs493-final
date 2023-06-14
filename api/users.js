@@ -65,27 +65,4 @@ router.post('/login', async function (req, res, next) {
   }
 });
 
-/*
-* Still need to implement getting info on a user given their ID
-*/
-
-function authorized(req) {
-    const authHeader = req.headers.authorization
-    const auth = authHeader && authHeader.split(' ')[1]
-    if (!auth) {
-        return false
-    }
-    try {
-        req.auth = jsonwebtoken.verify(auth, process.env.JWT_SECRET)
-        return true
-    }
-    catch (e) {
-        return false
-    }
-}
-  
-function admin(req) {
-    return authorized(req) && req.jwt.admin
-}
-  
-  module.exports = router
+module.exports = router
