@@ -1,6 +1,6 @@
 const { Router } = require('express');
 
-const { Course } = require('../models/course');
+const Course = require('../models/course');
 
 const { reqAuthentication, reqAdmin, reqInstructor, reqUser } = require('../lib/auth');
 
@@ -13,8 +13,6 @@ const router = Router();
 /**
  * Returns the list of all Courses. This list should be paginated.
  * The Courses returned should not contain the list of students in the Course or the list of Assignments for the Course.
- *
- * TODO: Verify endpoint behaves as expected
  */
 router.get('/', async function (req, res, next) {
     try {

@@ -53,11 +53,11 @@ async function getCourseById(courseId) {
  * @returns {Promise<*>} - the courses on the specified page
  */
 async function getAllCourses(subject, number, term, page = 0, numPerPage = 20) {
-  const results = await getDbReference().collection(DB_COLLECTION_NAME).find({
-    subject: subject,
-    number: number,
-    term: term
-  }).toArray();
+  const query = {};
+  if (subject) query.subject = subject;
+  if (number) query.number = number;
+  if (term) query.term = term;
+  const results = await getDbReference().collection(DB_COLLECTION_NAME).find(query).toArray();
 
   // Less efficient, but less complicated
   return results.slice(page * numPerPage, (page + 1) * numPerPage);
