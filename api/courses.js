@@ -6,6 +6,8 @@ const { reqAuthentication, reqAdmin, reqInstructor, reqUser } = require('../lib/
 
 const { validateAgainstSchema } = require('../lib/validation');
 
+const { ROLES } = require('../models/user');
+
 const router = Router();
 
 /**
@@ -76,9 +78,8 @@ router.get('/:courseId', async function (req, res, next) {
 router.patch('/:courseId', reqAuthentication, reqInstructor, async function (req, res, next) {
     try {
         const course = await Course.getCourseById(req.params.courseId);
-        const instructorId = req.jwt.id;
 
-        if (course && await isCourseInstructor(instructorId, req.params.courseId)) {
+        if (course && await isCourseInstructor(req.jwt, req.params.courseId)) {
             if (validateAgainstSchema(req.body, Course.CourseSchema)) {
                 res.status(400).json({
                     error: "Request body is not a valid course object"
@@ -125,9 +126,8 @@ router.delete('/:courseId', reqAuthentication, reqAdmin, async function (req, re
 router.get('/:courseId/students', reqAuthentication, reqInstructor, async function (req, res, next) {
     try {
         const course = await Course.getCourseById(req.params.courseId);
-        const instructorId = req.jwt.id;
 
-        if (course && await isCourseInstructor(instructorId, req.params.courseId) ) {
+        if (course && await isCourseInstructor(req.jwt, req.params.courseId) ) {
             const students = await Course.getStudentsEnrolledInCourse(req.params.courseId);
             res.status(200).json(students);
         } else {
@@ -147,10 +147,9 @@ router.get('/:courseId/students', reqAuthentication, reqInstructor, async functi
 router.post('/:courseId/students', reqAuthentication, reqInstructor, async function (req, res, next) {
     try {
         const course = await Course.getCourseById(req.params.courseId);
-        const instructorId = req.jwt.id;
         const body = req.body;
 
-        if (course && await isCourseInstructor(instructorId, req.params.courseId)) {
+        if (course && await isCourseInstructor(req.jwt, req.params.courseId)) {
             if (!body["add"] && !body["remove"]) {
                 res.status(400).json({
                     error: "Request body must contain 'add' and/or 'remove' array(s) of student IDs"
@@ -189,8 +188,7 @@ router.post('/:courseId/students', reqAuthentication, reqInstructor, async funct
 router.get('/:courseId/roster', reqAuthentication, reqInstructor, async function (req, res, next) {
     try {
         const course = await Course.getCourseById(req.params.courseId);
-        const instructorId = req.jwt.id;
-        if (course && await isCourseInstructor(instructorId, req.params.courseId)) {
+        if (course && await isCourseInstructor(req.jwt, req.params.courseId)) {
             const roster = await Course.getCSVofStudentsEnrolledInCourse(req.params.courseId);
             res.setHeader('Content-disposition', 'attachment; filename=roster.csv');
             res.set('Content-Type', 'text/csv');
@@ -224,7 +222,14 @@ router.get('/:courseId/assignments', reqAuthentication, reqUser, async function 
     }
 });
 
-async function isCourseInstructor(instructorId, courseId) {
+async function isCourseInstructor(jwt, courseId) {
+    const instructorId = jwt.id;
+    const role = jwt.role;
+
+    if (role === ROLES.ADMIN) {
+        return true;
+    }
+
     const course = await Course.getCourseById(courseId);
     if (course) {
         return course.instructorId === instructorId;
