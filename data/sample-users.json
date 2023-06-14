@@ -1,0 +1,23 @@
+[
+  {
+    "_id": "0",
+    "name": "luke",
+    "email": "luke@example.com",
+    "password": "hunter2",
+    "role": "admin"
+  },
+  {
+    "_id": "1",
+    "name": "leia",
+    "email": "leia@example.com",
+    "password": "12345678",
+    "role": "hunter2"
+  },
+  {
+    "_id": "2",
+    "name": "han",
+    "email": "han@example.com",
+    "password": "hunter2",
+    "role": "student"
+  }
+]

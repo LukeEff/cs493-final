@@ -1,7 +1,7 @@
 const { ObjectId } = require('mongodb');
 const { getDbReference } = require('../lib/mongo');
 const { extractValidFields } = require('../lib/validation');
-const { jwt } = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 const bcrypt = require("bcrypt")
 
 const DB_COLLECTION_NAME = 'users';
@@ -10,6 +10,7 @@ const ROLES = {
   ADMIN: 'admin',
   USER: 'user',
   INSTRUCTOR: 'instructor',
+  STUDENT: 'student'
 }
 
 const UserSchema = {
@@ -20,13 +21,17 @@ const UserSchema = {
   role: { required: true }
 }
 
+async function initIndexes() {
+  await getDbReference().collection(DB_COLLECTION_NAME).createIndex({ email: 1 }, { unique: true });
+}
+
 /**
  * Creates a new user in the database
  * @param user - the user schema to create
  * @returns {Promise<unknown>} - the id of the created user
  */
 async function createUser(user) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     user = extractValidFields(user, UserSchema);
 
     // Encrypt password
@@ -36,7 +41,11 @@ async function createUser(user) {
     user.role ??= ROLES.USER;
     getDbReference().collection(DB_COLLECTION_NAME).insertOne(user).then(result => {
       resolve(result.insertedId);
-    });
+    }).catch(
+      err => {
+        reject(err);
+      }
+    );
   });
 }
 
@@ -77,6 +86,29 @@ async function generateJWT(user) {
   }, process.env.JWT_SECRET, { expiresIn: '24h' })
 }
 
+async function insertBulkUsers(users, dropPrevMatchingId = true) {
+  console.log("Inserting bulk users: ", users);
+  const usersToInsert = users.map(user => {
+    user = extractValidFields(user, UserSchema);
+    user.role ??= ROLES.STUDENT;
+    user.password = bcrypt.hashSync(user.password, bcrypt.genSaltSync());
+    return user;
+  });
+  try {
+    if (dropPrevMatchingId) {
+      await getDbReference().collection(DB_COLLECTION_NAME).deleteMany({ _id: { $in: usersToInsert.map(user => user._id) } });
+    }
+
+    const results = await getDbReference().collection(DB_COLLECTION_NAME).insertMany(usersToInsert);
+    console.log("Inserted bulk users: ", results.insertedIds);
+    return results.insertedIds;
+  } catch (e) {
+    console.log("Could not insert bulk users, probably because they already exist: ");
+  }
+}
+
+exports.initIndexes = initIndexes;
+exports.insertBulkUsers = insertBulkUsers;
 exports.ROLES = ROLES;
 exports.UserSchema = UserSchema;
 exports.createUser = createUser;

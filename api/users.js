@@ -1,12 +1,10 @@
 const { Router } = require('express')
 
-const { User } = require('../models/user')
+const { ROLES, validateUser, createUser, getUserById } = require('../models/user')
 
 const { Course } = require('../models/course')
 
 const { reqAuthentication, reqUser, isAdmin } = require('../lib/auth')
-
-const { createUser, getUserById } = require('../models/user')
 
 const router = Router()
 
@@ -19,7 +17,7 @@ router.post('/', async function (req, res, next) {
   const desiredRole = req.body.role;
 
   // Ensure permissions are not being violated
-  if (desiredRole === User.ROLES.ADMIN || desiredRole === User.ROLES.INSTRUCTOR) {
+  if (desiredRole === ROLES.ADMIN || desiredRole === ROLES.INSTRUCTOR) {
     if (!isAdmin(req)) {
       res.status(403).json({
         error: `Only admins can create users with the '${desiredRole}' role.`
@@ -33,7 +31,13 @@ router.post('/', async function (req, res, next) {
     const user = await createUser(req.body);
     res.status(201).json(user);
   } catch (err) {
-    res.status(400).json(err);
+    if (err.code === 11000) {
+      res.status(400).json({
+        error: "Email already in use"
+      });
+    } else {
+      res.status(400).json(err);
+    }
   }
 });
 
@@ -41,7 +45,8 @@ router.post('/', async function (req, res, next) {
  * Authenticate a specific User with their email address and password.
  */
 router.post('/login', async function (req, res, next) {
-  const { email, password } = req.body;
+  const email = req.body.email;
+  const password = req.body.password;
 
   if (!email || !password) {
     res.status(400).json({
@@ -51,7 +56,7 @@ router.post('/login', async function (req, res, next) {
   }
 
   try {
-    const jwt = await User.validateUser(email, password)
+    const jwt = await validateUser(email, password)
 
     if (jwt) {
       res.status(200).json(jwt)
@@ -96,10 +101,10 @@ router.get('/:userId', reqAuthentication, reqUser, async function (req, res, nex
     if (user) {
       res.status(200).json(user);
 
-      if (user.role === User.ROLES.INSTRUCTOR) {
+      if (user.role === ROLES.INSTRUCTOR) {
         user['courses'] = await Course.getCourseIdsByInstructorId(userId)
       }
-      else if (user.role === User.ROLES.USER) {
+      else if (user.role === ROLES.STUDENT) {
         user['courses'] = await Course.getCourseIdsEnrolledByStudent(userId)
       }
     } else {
