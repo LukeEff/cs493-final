@@ -2,6 +2,7 @@ const { ObjectId } = require('mongodb');
 const { getDbReference } = require('../lib/mongo');
 const { extractValidFields } = require('../lib/validation');
 const { jwt } = require('jsonwebtoken');
+const bcrypt = require("bcrypt")
 
 const DB_COLLECTION_NAME = 'users';
 
@@ -27,6 +28,11 @@ const UserSchema = {
 async function createUser(user) {
   return new Promise((resolve) => {
     user = extractValidFields(user, UserSchema);
+
+    // Encrypt password
+    const salt = bcrypt.genSaltSync()
+    user.password = bcrypt.hashSync(user.password, salt)
+
     user.role ??= ROLES.USER;
     getDbReference().collection(DB_COLLECTION_NAME).insertOne(user).then(result => {
       resolve(result.insertedId);
@@ -56,7 +62,7 @@ async function getUserByEmail(email) {
 
 async function validateUser(email, password) {
   const user = await getUserByEmail(email);
-  if (user && user.password === password) {
+  if (user && bcrypt.compareSync(password, user.password)) {
     return generateJWT(user);
   }
   return null;
