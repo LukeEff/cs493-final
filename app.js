@@ -1,6 +1,7 @@
 const express = require('express')
 const app = express()
 const api = require('./api')
+const { connectToDb } = require('./lib/mongo')
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.json())
@@ -28,4 +29,10 @@ app.use('*', function (req, res, next) {
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
+})
+
+connectToDb(function () {
+  app.listen(port, function () {
+    console.log("== Server is running on port", port)
+  })
 })
