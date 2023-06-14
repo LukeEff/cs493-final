@@ -9,6 +9,9 @@ const { ROLES } = require('../models/user');
 const { validateAgainstSchema } = require('../lib/validation');
 const {Course} = require("../models/course");
 
+const multer = require('multer');
+const upload = multer({ dest: `${__dirname}/uploads` }); // Do we want to restrict file types?
+
 const router = Router();
 
 /**
@@ -143,7 +146,7 @@ router.get('/:assignmentId/submissions', reqAuthentication, reqInstructor, async
  * authenticated User with 'student' role who is enrolled in the Course corresponding to the Assignment's
  * courseId can create a Submission.
  */
-router.post('/:assignmentId/submissions', reqAuthentication, reqUser, async function (req, res, next) {
+router.post('/:assignmentId/submissions', reqAuthentication, reqUser, upload.single('file'), async function (req, res, next) {
   try {
     const assignment = await Assignment.getAssignmentById(req.params.assignmentId);
 
@@ -159,6 +162,7 @@ router.post('/:assignmentId/submissions', reqAuthentication, reqUser, async func
       submission.assignmentId = req.params.assignmentId;
       submission.studentId = req.jwt._id;
       submission.timestamp = new Date().getTime();
+      submission.file = req.file;
       const submissionRes = await Assignment.createSubmission(submission);
       res.status(201).json(submissionRes);
     } else {
