@@ -55,8 +55,14 @@ async function createUser(user) {
  * @returns {Promise<*>} - the user with the specified id
  */
 async function getUserById(userId) {
-  const results = await getDbReference().collection(DB_COLLECTION_NAME).find({ _id: new ObjectId(userId) }).toArray();
-  return results[0];
+  const results = await getDbReference().collection(DB_COLLECTION_NAME).find({ _id: userId }).toArray();
+
+  // Remove password from results
+  if (results && results[0]) {
+    delete results[0].password;
+    return results[0];
+  }
+  return null;
 }
 
 /**
