@@ -2,6 +2,20 @@
 ### Contributors: Luke Fernandez & Caleb Knight ###
 This is our project for CS493.  The goal of this project is to create an app similar to Canvas known as Tarpaulin. Our app will containt 4 main entities: *Users*, *Courses*, *Assignments*, and *Submissions*. Each of these will have specifc routes and unique functions.
 
+### **Running the App** ###
+
+To run the app, you will need to have Docker installed.  Once you have Docker installed, you can run the following 
+command to start the app:
+
+```bash
+docker-compose up
+```
+
+This will start the app on port 8000.  You can then access the app by going to http://localhost:8000.
+
+Check the Postman collection for the routes and their functions as well as the OpenAPI specification for more 
+information.
+
 ### **Users** ###
  Could be an *admin*, *instructor*, or a *student*.  Based on what role a User possesses, will depend on what permissions they will have.  
 
