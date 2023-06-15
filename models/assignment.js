@@ -2,6 +2,7 @@ const { ObjectId, GridFSBucket } = require('mongodb');
 const { getDbReference } = require('../lib/mongo');
 const { extractValidFields } = require('../lib/validation');
 const { fs } = require('fs');
+const Console = require("console");
 
 const DB_COLLECTION_NAME = 'assignments';
 const DB_COLLECTION_NAME_SUBMISSIONS = 'submissions';
@@ -9,7 +10,7 @@ const DB_SUBMISSION_FILE_BUCKET_NAME = 'submissions';
 
 const AssignmentSchema = {
     _id: { required: true, unique: true },
-    courseNum: { required: true },
+    courseId: { required: true },
     title: { required: true },
     points: { required: true },
     due: { required: true }
@@ -33,12 +34,12 @@ exports.AssignmentSchema = AssignmentSchema;
 * @returns {Promise<unknown>} - id of created assignment
 */
 async function createAssignment(assignment) {
-    return new Promise((resolve) => {
-        assignment = extractValidFields(assignment, AssignmentSchema);
-        getDbReference().collection(DB_COLLECTION_NAME).insertOne(assignment).then(result => {
-            resolve(result.insertId);
-        });
+  return new Promise((resolve) => {
+    assignment = extractValidFields(assignment, AssignmentSchema);
+    getDbReference().collection(DB_COLLECTION_NAME).insertOne(assignment).then(result => {
+      resolve(result.insertedId);
     });
+  });
 }
 exports.createAssignment = createAssignment;
 

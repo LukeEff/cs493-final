@@ -1,13 +1,13 @@
 const { Router } = require('express');
 
-const { Assignment } = require('../models/assignment');
+const Assignment = require('../models/assignment');
 
 const { reqAuthentication, reqInstructor, reqUser } = require('../lib/auth');
 
 const { ROLES } = require('../models/user');
 
 const { validateAgainstSchema } = require('../lib/validation');
-const {Course} = require("../models/course");
+const Course = require("../models/course");
 
 const multer = require('multer');
 const upload = multer({ dest: `${__dirname}/uploads` }); // Do we want to restrict file types?
@@ -25,14 +25,6 @@ router.post('/', reqAuthentication, reqInstructor,  async function (req, res, ne
     if (!await isCourseInstructor(req.jwt, req.body.courseId)) {
       res.status(403).json({
         error: "Unauthorized to create the specified assignment"
-      });
-      return;
-    }
-
-    // Check if the request body is a valid assignment object
-    if (validateAgainstSchema(req.body, Assignment.AssignmentSchema)) {
-      res.status(400).json({
-          error: "Request body is not a valid assignment object"
       });
       return;
     }
@@ -182,11 +174,16 @@ router.post('/:assignmentId/submissions', reqAuthentication, reqUser, upload.sin
  * @returns {Promise<boolean>} true if course has instructor with specified ID or if user is an admin, false otherwise
  */
 async function isCourseInstructor(jwt, courseId) {
-  const instructorId = jwt._id;
+  const instructorId = jwt.id;
   const role = jwt.role;
+
   if (role === ROLES.ADMIN) {
     return true;
   }
+  if (role !== ROLES.INSTRUCTOR) {
+    return false;
+  }
+
   const course = await Course.getCourseById(courseId);
   if (course) {
     return course.instructorId === instructorId;
