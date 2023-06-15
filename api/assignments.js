@@ -141,6 +141,7 @@ router.get('/:assignmentId/submissions', reqAuthentication, reqInstructor, async
  */
 router.post('/:assignmentId/submissions', reqAuthentication, reqUser, upload.single('file'), async function (req, res, next) {
   try {
+
     const assignment = await Assignment.getAssignmentById(req.params.assignmentId);
 
     if (assignment && (await isStudentEnrolled(req.jwt, assignment.courseId))) {
@@ -159,9 +160,15 @@ router.post('/:assignmentId/submissions', reqAuthentication, reqUser, upload.sin
       const submissionRes = await Assignment.createSubmission(submission);
       res.status(201).json(submissionRes);
     } else {
-      res.status(404).json({
-        error: "Requested assignment ID not found"
-      });
+      if (!assignment) {
+        res.status(404).json({
+          error: "Requested assignment ID not found"
+        });
+      } else {
+        res.status(403).json({
+          error: "Unauthorized to create a submission for the specified assignment"
+        });
+      }
     }
   } catch (err) {
     next(err);
