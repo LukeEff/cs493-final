@@ -50,8 +50,9 @@ exports.createAssignment = createAssignment;
 * @returns {Promise<*>} - the assignment with the specified id
 */
 async function getAssignmentById(assignmentId) {
-    const results = await getDbReference().collection(DB_COLLECTION_NAME).find({_id: new ObjectId(assignmentId) }).toArray();
-    return results[0];
+  if (!ObjectId.isValid(assignmentId)) return null;
+  const results = await getDbReference().collection(DB_COLLECTION_NAME).find({_id: new ObjectId(assignmentId) }).toArray();
+  return results[0];
 }
 
 exports.getAssignmentById = getAssignmentById;
@@ -63,8 +64,9 @@ exports.getAssignmentById = getAssignmentById;
 * 
 */
 async function updateAssignment(assignmentId) {
-    const results = await getDbReference().collection(DB_COLLECTION_NAME).updateOne({_id: new ObjectId(assignmentId) });
-    return results;
+  if (!ObjectId.isValid(assignmentId)) return null;
+  const results = await getDbReference().collection(DB_COLLECTION_NAME).updateOne({_id: new ObjectId(assignmentId) });
+  return results;
 }
 exports.updateAssignment = updateAssignment;
 
@@ -75,8 +77,9 @@ exports.updateAssignment = updateAssignment;
  * Do we want to delete submissions for this assignment as well?
 */
 async function deleteAssignment(assignmentId) {
-    const results = await getDbReference().collection(DB_COLLECTION_NAME).deleteOne({_id: new ObjectId(assignmentId) });
-    return results;
+  if (!ObjectId.isValid(assignmentId)) return null;
+  const results = await getDbReference().collection(DB_COLLECTION_NAME).deleteOne({_id: new ObjectId(assignmentId) });
+  return results;
 }
 
 async function getSubmissionsByAssignmentId(assignmentId, page = 0, numPerPage = 20) {
