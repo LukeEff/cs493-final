@@ -39,6 +39,7 @@ async function createCourse(course) {
  * @returns {Promise<*>} - the course with the specified id
  */
 async function getCourseById(courseId) {
+  if (!ObjectId.isValid(courseId)) return null;
   const results = await getDbReference().collection(DB_COLLECTION_NAME).find({ _id: new ObjectId(courseId) }).toArray();
   return results[0] || null; // TODO - ensure error is not thrown if no results
 }
@@ -76,11 +77,13 @@ async function getCourseIdsEnrolledByStudent(userId) {
 }
 
 async function updateCourseById(courseId, course) {
+  if (!ObjectId.isValid(courseId)) return null;
   course = extractValidFields(course, CourseSchema);
   return await getDbReference().collection(DB_COLLECTION_NAME).updateOne({ _id: new ObjectId(courseId) }, { $set: course });
 }
 
 async function deleteCourseById(courseId) {
+  if (!ObjectId.isValid(courseId)) return null;
   return await getDbReference().collection(DB_COLLECTION_NAME).deleteOne({ _id: new ObjectId(courseId) });
 }
 
@@ -130,7 +133,8 @@ async function unenrollStudentInCourse(courseId, studentId) {
 }
 
 async function getAssignmentsForCourse(courseId) {
-  return await getDbReference().collection('assignments').find({courseId: courseId}).toArray();
+  if (!ObjectId.isValid(courseId)) return null;
+  return await getDbReference().collection('assignments').find({courseId: new ObjectId(courseId)}).toArray();
 }
 
 exports.EnrollmentSchema = EnrollmentSchema;
