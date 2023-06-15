@@ -60,26 +60,24 @@ exports.getAssignmentById = getAssignmentById;
 /**
 * Update assignment
 * @param assignmentId - id of assignment to update
-* @returns {Promis<ObjectId*>} - updated assignment
-* 
+ * @param assignment - assignment schema to update
+ * @returns {Promise<*>} - confirm updated assignment
 */
-async function updateAssignment(assignmentId) {
+async function updateAssignment(assignmentId, assignment) {
   if (!ObjectId.isValid(assignmentId)) return null;
-  const results = await getDbReference().collection(DB_COLLECTION_NAME).updateOne({_id: new ObjectId(assignmentId) });
-  return results;
+  return await getDbReference().collection(DB_COLLECTION_NAME).updateOne({_id: new ObjectId(assignmentId)}, {$set: assignment});
 }
 exports.updateAssignment = updateAssignment;
 
 /**
 * Delete an assignment
-* @param courseId - id of assignment to delete
+* @param assignmentId - id of assignment to delete
 * @returns {Promise<*>} - confirm deleted assignment
  * Do we want to delete submissions for this assignment as well?
 */
 async function deleteAssignment(assignmentId) {
   if (!ObjectId.isValid(assignmentId)) return null;
-  const results = await getDbReference().collection(DB_COLLECTION_NAME).deleteOne({_id: new ObjectId(assignmentId) });
-  return results;
+  return await getDbReference().collection(DB_COLLECTION_NAME).deleteOne({_id: new ObjectId(assignmentId)});
 }
 
 async function getSubmissionsByAssignmentId(assignmentId, page = 0, numPerPage = 20) {
