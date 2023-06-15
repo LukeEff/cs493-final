@@ -117,8 +117,8 @@ router.delete('/:assignmentId', reqAuthentication, reqInstructor, async function
  */
 router.get('/:assignmentId/submissions', reqAuthentication, reqInstructor, async function (req, res, next) {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const numPerPage = parseInt(req.query.perPage) || 10;
+    const page = parseInt(req.query.page) || 0;
+    const numPerPage = parseInt(req.query.perPage) || 20;
     const assignment = await Assignment.getAssignmentById(req.params.assignmentId);
 
     if (assignment && (await isCourseInstructor(req.jwt, assignment.courseId))) {

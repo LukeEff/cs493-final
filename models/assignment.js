@@ -116,6 +116,7 @@ async function uploadSubmissionFile(submission, file) {
 }
 
 async function downloadSubmissionFileById(submissionId, outputFile) {
+  if (!ObjectId.isValid(submissionId)) return null;
   const db = getDbReference();
   const bucket = new GridFSBucket(db, { bucketName: DB_SUBMISSION_FILE_BUCKET_NAME });
   const downloadStream = bucket.openDownloadStream(new ObjectId(submissionId));
@@ -123,6 +124,7 @@ async function downloadSubmissionFileById(submissionId, outputFile) {
 }
 
 async function doesSubmissionFileExist(submissionId) {
+  if (!ObjectId.isValid(submissionId)) return null;
   const db = getDbReference();
   const bucket = new GridFSBucket(db, { bucketName: DB_SUBMISSION_FILE_BUCKET_NAME });
   const results = await bucket.find({ _id: new ObjectId(submissionId) }).toArray();
