@@ -134,7 +134,7 @@ async function unenrollStudentInCourse(courseId, studentId) {
 
 async function getAssignmentsForCourse(courseId) {
   if (!ObjectId.isValid(courseId)) return null;
-  return await getDbReference().collection('assignments').find({courseId: new ObjectId(courseId)}).toArray();
+  return await getDbReference().collection('assignments').find({courseId: courseId}).toArray();
 }
 
 exports.EnrollmentSchema = EnrollmentSchema;
