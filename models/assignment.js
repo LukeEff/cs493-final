@@ -1,8 +1,7 @@
 const { ObjectId, GridFSBucket } = require('mongodb');
 const { getDbReference } = require('../lib/mongo');
 const { extractValidFields } = require('../lib/validation');
-const { fs } = require('fs');
-const Console = require("console");
+const fs = require('fs');
 
 const DB_COLLECTION_NAME = 'assignments';
 const DB_COLLECTION_NAME_SUBMISSIONS = 'submissions';
@@ -143,7 +142,7 @@ async function createSubmission(submission) {
     getDbReference().collection(DB_COLLECTION_NAME_SUBMISSIONS).insertOne(submission).then(result => {
       // Upload file to GridFS using the newly created submission ID
       uploadSubmissionFile(submission, file)
-      resolve(result.insertId);
+      resolve(result.insertedId);
     });
   });
 }

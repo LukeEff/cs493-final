@@ -141,7 +141,6 @@ router.get('/:assignmentId/submissions', reqAuthentication, reqInstructor, async
  */
 router.post('/:assignmentId/submissions', reqAuthentication, reqUser, upload.single('file'), async function (req, res, next) {
   try {
-
     const assignment = await Assignment.getAssignmentById(req.params.assignmentId);
 
     if (assignment && (await isStudentEnrolled(req.jwt, assignment.courseId))) {
@@ -154,7 +153,7 @@ router.post('/:assignmentId/submissions', reqAuthentication, reqUser, upload.sin
 
       const submission = req.body
       submission.assignmentId = req.params.assignmentId;
-      submission.studentId = req.jwt._id;
+      submission.studentId = req.jwt.id;
       submission.timestamp = new Date().getTime();
       submission.file = req.file;
       const submissionRes = await Assignment.createSubmission(submission);
