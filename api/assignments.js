@@ -1,13 +1,13 @@
 const { Router } = require('express');
 
-const { Assignment } = require('../models/assignment');
+const Assignment = require('../models/assignment');
 
 const { reqAuthentication, reqInstructor, reqUser } = require('../lib/auth');
 
 const { ROLES } = require('../models/user');
 
 const { validateAgainstSchema } = require('../lib/validation');
-const {Course} = require("../models/course");
+const Course = require("../models/course");
 
 const multer = require('multer');
 const upload = multer({ dest: `${__dirname}/uploads` }); // Do we want to restrict file types?
@@ -25,14 +25,6 @@ router.post('/', reqAuthentication, reqInstructor,  async function (req, res, ne
     if (!await isCourseInstructor(req.jwt, req.body.courseId)) {
       res.status(403).json({
         error: "Unauthorized to create the specified assignment"
-      });
-      return;
-    }
-
-    // Check if the request body is a valid assignment object
-    if (validateAgainstSchema(req.body, Assignment.AssignmentSchema)) {
-      res.status(400).json({
-          error: "Request body is not a valid assignment object"
       });
       return;
     }
@@ -82,7 +74,8 @@ router.patch('/:assignmentId', reqAuthentication, reqInstructor, async function 
       }
 
       const updatedAssignment = await Assignment.updateAssignment(req.params.assignmentId, req.body);
-      res.status(200).json(updatedAssignment);
+      const updated = await Assignment.getAssignmentById(req.params.assignmentId);
+      res.status(200).json(updated);
     } else {
       res.status(404).json({
         error: "Requested assignment ID not found"
@@ -124,8 +117,8 @@ router.delete('/:assignmentId', reqAuthentication, reqInstructor, async function
  */
 router.get('/:assignmentId/submissions', reqAuthentication, reqInstructor, async function (req, res, next) {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const numPerPage = parseInt(req.query.perPage) || 10;
+    const page = parseInt(req.query.page) || 0;
+    const numPerPage = parseInt(req.query.perPage) || 20;
     const assignment = await Assignment.getAssignmentById(req.params.assignmentId);
 
     if (assignment && (await isCourseInstructor(req.jwt, assignment.courseId))) {
@@ -160,15 +153,21 @@ router.post('/:assignmentId/submissions', reqAuthentication, reqUser, upload.sin
 
       const submission = req.body
       submission.assignmentId = req.params.assignmentId;
-      submission.studentId = req.jwt._id;
+      submission.studentId = req.jwt.id;
       submission.timestamp = new Date().getTime();
       submission.file = req.file;
       const submissionRes = await Assignment.createSubmission(submission);
       res.status(201).json(submissionRes);
     } else {
-      res.status(404).json({
-        error: "Requested assignment ID not found"
-      });
+      if (!assignment) {
+        res.status(404).json({
+          error: "Requested assignment ID not found"
+        });
+      } else {
+        res.status(403).json({
+          error: "Unauthorized to create a submission for the specified assignment"
+        });
+      }
     }
   } catch (err) {
     next(err);
@@ -182,11 +181,16 @@ router.post('/:assignmentId/submissions', reqAuthentication, reqUser, upload.sin
  * @returns {Promise<boolean>} true if course has instructor with specified ID or if user is an admin, false otherwise
  */
 async function isCourseInstructor(jwt, courseId) {
-  const instructorId = jwt._id;
+  const instructorId = jwt.id;
   const role = jwt.role;
+
   if (role === ROLES.ADMIN) {
     return true;
   }
+  if (role !== ROLES.INSTRUCTOR) {
+    return false;
+  }
+
   const course = await Course.getCourseById(courseId);
   if (course) {
     return course.instructorId === instructorId;

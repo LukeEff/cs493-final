@@ -1,7 +1,7 @@
 const { ObjectId, GridFSBucket } = require('mongodb');
 const { getDbReference } = require('../lib/mongo');
 const { extractValidFields } = require('../lib/validation');
-const { fs } = require('fs');
+const fs = require('fs');
 
 const DB_COLLECTION_NAME = 'assignments';
 const DB_COLLECTION_NAME_SUBMISSIONS = 'submissions';
@@ -9,7 +9,7 @@ const DB_SUBMISSION_FILE_BUCKET_NAME = 'submissions';
 
 const AssignmentSchema = {
     _id: { required: true, unique: true },
-    courseNum: { required: true },
+    courseId: { required: true },
     title: { required: true },
     points: { required: true },
     due: { required: true }
@@ -33,12 +33,12 @@ exports.AssignmentSchema = AssignmentSchema;
 * @returns {Promise<unknown>} - id of created assignment
 */
 async function createAssignment(assignment) {
-    return new Promise((resolve) => {
-        assignment = extractValidFields(assignment, AssignmentSchema);
-        getDbReference().collection(DB_COLLECTION_NAME).insertOne(assignment).then(result => {
-            resolve(result.insertId);
-        });
+  return new Promise((resolve) => {
+    assignment = extractValidFields(assignment, AssignmentSchema);
+    getDbReference().collection(DB_COLLECTION_NAME).insertOne(assignment).then(result => {
+      resolve(result.insertedId);
     });
+  });
 }
 exports.createAssignment = createAssignment;
 
@@ -49,8 +49,9 @@ exports.createAssignment = createAssignment;
 * @returns {Promise<*>} - the assignment with the specified id
 */
 async function getAssignmentById(assignmentId) {
-    const results = await getDbReference().collection(DB_COLLECTION_NAME).find({_id: new ObjectId(assignmentId) }).toArray();
-    return results[0];
+  if (!ObjectId.isValid(assignmentId)) return null;
+  const results = await getDbReference().collection(DB_COLLECTION_NAME).find({_id: new ObjectId(assignmentId) }).toArray();
+  return results[0];
 }
 
 exports.getAssignmentById = getAssignmentById;
@@ -58,24 +59,24 @@ exports.getAssignmentById = getAssignmentById;
 /**
 * Update assignment
 * @param assignmentId - id of assignment to update
-* @returns {Promis<ObjectId*>} - updated assignment
-* 
+ * @param assignment - assignment schema to update
+ * @returns {Promise<*>} - confirm updated assignment
 */
-async function updateAssignment(assignmentId) {
-    const results = await getDbReference().collection(DB_COLLECTION_NAME).updateOne({_id: new ObjectId(assignmentId) });
-    return results;
+async function updateAssignment(assignmentId, assignment) {
+  if (!ObjectId.isValid(assignmentId)) return null;
+  return await getDbReference().collection(DB_COLLECTION_NAME).updateOne({_id: new ObjectId(assignmentId)}, {$set: assignment});
 }
 exports.updateAssignment = updateAssignment;
 
 /**
 * Delete an assignment
-* @param courseId - id of assignment to delete
+* @param assignmentId - id of assignment to delete
 * @returns {Promise<*>} - confirm deleted assignment
  * Do we want to delete submissions for this assignment as well?
 */
 async function deleteAssignment(assignmentId) {
-    const results = await getDbReference().collection(DB_COLLECTION_NAME).deleteOne({_id: new ObjectId(assignmentId) });
-    return results;
+  if (!ObjectId.isValid(assignmentId)) return null;
+  return await getDbReference().collection(DB_COLLECTION_NAME).deleteOne({_id: new ObjectId(assignmentId)});
 }
 
 async function getSubmissionsByAssignmentId(assignmentId, page = 0, numPerPage = 20) {
@@ -115,6 +116,7 @@ async function uploadSubmissionFile(submission, file) {
 }
 
 async function downloadSubmissionFileById(submissionId, outputFile) {
+  if (!ObjectId.isValid(submissionId)) return null;
   const db = getDbReference();
   const bucket = new GridFSBucket(db, { bucketName: DB_SUBMISSION_FILE_BUCKET_NAME });
   const downloadStream = bucket.openDownloadStream(new ObjectId(submissionId));
@@ -122,6 +124,7 @@ async function downloadSubmissionFileById(submissionId, outputFile) {
 }
 
 async function doesSubmissionFileExist(submissionId) {
+  if (!ObjectId.isValid(submissionId)) return null;
   const db = getDbReference();
   const bucket = new GridFSBucket(db, { bucketName: DB_SUBMISSION_FILE_BUCKET_NAME });
   const results = await bucket.find({ _id: new ObjectId(submissionId) }).toArray();
@@ -141,7 +144,7 @@ async function createSubmission(submission) {
     getDbReference().collection(DB_COLLECTION_NAME_SUBMISSIONS).insertOne(submission).then(result => {
       // Upload file to GridFS using the newly created submission ID
       uploadSubmissionFile(submission, file)
-      resolve(result.insertId);
+      resolve(result.insertedId);
     });
   });
 }
