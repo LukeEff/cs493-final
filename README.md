@@ -4,6 +4,21 @@ This is our project for CS493.  The goal of this project is to create an app sim
 
 ### **Running the App** ###
 
+#### Create .env file ####
+
+a) Create the .env file
+
+b) Add the following to the .env file:
+
+```bash
+MONGO_DB_NAME=<name of database>
+MONGO_ROOT_USER=<name of root user>
+MONGO_ROOT_PASSWORD=<password for root user>
+MONGO_USER=<same as MONGO_DB_NAME>
+MONGO_PASSWORD=<password for MONGO_USER>
+JWT_SECRET=<secret for JWT>
+```
+
 To run the app, you will need to have Docker installed.  Once you have Docker installed, you can run the following 
 command to start the app:
 
