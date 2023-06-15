@@ -53,11 +53,12 @@ async function getCourseById(courseId) {
  * @returns {Promise<*>} - the courses on the specified page
  */
 async function getAllCourses(subject, number, term, page = 0, numPerPage = 20) {
-  const results = await getDbReference().collection(DB_COLLECTION_NAME).find({
-    subject: subject,
-    number: number,
-    term: term
-  }).toArray();
+  const query = {};
+  if (subject) query.subject = subject;
+  if (number) query.number = number;
+  if (term) query.term = term;
+  const results = await getDbReference().collection(DB_COLLECTION_NAME).find(query).toArray();
+  console.log(results);
 
   // Less efficient, but less complicated
   return results.slice(page * numPerPage, (page + 1) * numPerPage);
@@ -65,6 +66,7 @@ async function getAllCourses(subject, number, term, page = 0, numPerPage = 20) {
 
 async function getCourseIdsByInstructorId(instructorId) {
   const results = await getDbReference().collection(DB_COLLECTION_NAME).find({ instructorId: instructorId }).toArray();
+  console.log(results);
   return results.map(result => result._id);
 }
 
@@ -95,16 +97,34 @@ async function getCSVofStudentsEnrolledInCourse(courseId) {
   const studentIds = students.map(student => student.studentId);
   const studentObjects = await getDbReference().collection('users').find({_id: {$in: studentIds}}).toArray();
   return studentObjects.map(student =>
-      student.userId + ',' + student.name + ',' + student.email
+      student._id + ',' + student.name + ',' + student.email
   ).join('\n');
 }
 
-async function enrollStudentInCourse(enrollment) {
-enrollment = extractValidFields(enrollment, EnrollmentSchema);
+async function enrollStudentInCourse(courseId, studentId) {
+  let enrollment = {
+    courseId: courseId,
+    studentId: studentId
+  }
+  // Skip double enrollment
+  const existingEnrollment = await getDbReference().collection(DB_COLLECTION_NAME_ENROLLMENTS).find(enrollment).toArray();
+  if (existingEnrollment.length > 0) {
+    return existingEnrollment[0];
+  }
+  enrollment = extractValidFields(enrollment, EnrollmentSchema);
   return await getDbReference().collection(DB_COLLECTION_NAME_ENROLLMENTS).insertOne(enrollment);
 }
 
-async function unenrollStudentInCourse(enrollment) {
+async function unenrollStudentInCourse(courseId, studentId) {
+  let enrollment = {
+    courseId: courseId,
+    studentId: studentId
+  }
+  // Skip if not enrolled
+  const existingEnrollment = await getDbReference().collection(DB_COLLECTION_NAME_ENROLLMENTS).find(enrollment).toArray();
+  if (existingEnrollment.length === 0) {
+    return null;
+  }
   enrollment = extractValidFields(enrollment, EnrollmentSchema);
   return await getDbReference().collection(DB_COLLECTION_NAME_ENROLLMENTS).deleteOne(enrollment);
 }

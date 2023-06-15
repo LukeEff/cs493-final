@@ -1,6 +1,6 @@
 const { Router } = require('express');
 
-const { Course } = require('../models/course');
+const Course = require('../models/course');
 
 const { reqAuthentication, reqAdmin, reqInstructor, reqUser } = require('../lib/auth');
 
@@ -13,16 +13,14 @@ const router = Router();
 /**
  * Returns the list of all Courses. This list should be paginated.
  * The Courses returned should not contain the list of students in the Course or the list of Assignments for the Course.
- *
- * TODO: Verify endpoint behaves as expected
  */
 router.get('/', async function (req, res, next) {
     try {
         const term = req.query.term;
         const subject = req.query.subject;
         const number = req.query.number;
-        const page = parseInt(req.query.page) || 1;
-        const coursesPerPage = (req.query.numPerPage) || 10;
+        const page = parseInt(req.query.page || 0);
+        const coursesPerPage = (req.query.numPerPage || 20);
 
         const courses = await Course.getAllCourses(subject, number, term, page, coursesPerPage);
         res.status(200).json(courses);
@@ -87,7 +85,7 @@ router.patch('/:courseId', reqAuthentication, reqInstructor, async function (req
                 return;
             }
             const updatedCourse = await Course.updateCourseById(req.params.courseId, req.body);
-            res.status(200).json(updatedCourse);
+            res.status(200).json(await Course.getCourseById(req.params.courseId));
         } else {
             res.status(404).json({
                 error: "Requested course ID not found"
@@ -182,8 +180,6 @@ router.post('/:courseId/students', reqAuthentication, reqInstructor, async funct
  * Returns a CSV file containing information about all of the students currently enrolled in the Course,
  * including names, IDs, and email addresses. Only an authenticated User with 'admin' role or an authenticated
  * 'instructor' User whose ID matches the instructorId of the Course can fetch the course roster.
- *
- * // TODO: Need to verify that the CSV file is being returned correctly
  */
 router.get('/:courseId/roster', reqAuthentication, reqInstructor, async function (req, res, next) {
     try {
